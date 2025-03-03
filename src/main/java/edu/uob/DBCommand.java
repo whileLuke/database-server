@@ -11,10 +11,12 @@ public abstract class DBCommand extends CommandParser {
     public static void parse(String s) {
         //conditions, colnames, tablenames, dbname, commandtype
     }
-    String query(CommandParser s) {
+    String query(DBServer s) {
 
         return "";
     }
+
+    //public abstract void query(CommandParser commandParser);
 }
 
 

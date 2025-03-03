@@ -1,17 +1,11 @@
 package edu.uob;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
 //need a command parser and a command lexer
 
@@ -21,8 +15,11 @@ public class DBServer {
     private static final char END_OF_TRANSMISSION = 4;
     private String storageFolderPath;
     private String query;
+    private String currentDB;
+    private Map<String, Table> tables = new HashMap<>();
     String[] specialCharacters = {"(",")",",",";"};
     ArrayList<String> tokens = new ArrayList<String>();
+    CommandParser parser = new CommandParser();
     public static void main(String args[]) throws IOException {
         DBServer server = new DBServer();
         server.blockingListenOn(8888);
@@ -52,7 +49,7 @@ public class DBServer {
         // TODO implement your server logic here
         query = command;
         setupQuery();
-        CommandParser.parseCommand(tokens);
+        parser.parseCommand(tokens);
         return "";
     }
 
@@ -65,16 +62,44 @@ public class DBServer {
                 tokens.addAll(Arrays.asList(nextBatchOfTokens));
             }
         }
-        for(int i=0; i<tokens.size(); i++) System.out.println(tokens.get(i));
+        for (int i=0; i<tokens.size(); i++) System.out.println(tokens.get(i));
     }
 
     String[] tokenise(String input) {
-        for(int i=0; i<specialCharacters.length ;i++) {
+        for (int i=0; i<specialCharacters.length ;i++) {
             input = input.replace(specialCharacters[i], " " + specialCharacters[i] + " ");
         }
         while (input.contains("  ")) input = input.replace("  ", " "); // Replace two spaces by one
         input = input.trim();
         return input.split(" ");
+    }
+    //protected boool?
+    protected boolean useDatabase(String DBName) {
+        File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
+        if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
+        currentDB = DBName.toLowerCase();
+        return true;
+    }
+
+    protected boolean createTable(String tableName, List<String> columnNames) {
+        try(FileWriter writer = new FileWriter(storageFolderPath + File.separator + currentDB + File.separator + tableName.toLowerCase() + ".tab")){
+            Table newTable = new Table(null);
+            tables.put(tableName, newTable);
+            writer.write(newTable.toString());
+        } catch(IOException e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean createDatabase(String DBName) {
+        if (DBName == null) return false;
+        File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
+        if (DBDirectory.exists()) return false;
+        return DBDirectory.mkdirs();
+        //write it to disk
+        //return true;
     }
 
     //  === Methods below handle networking aspects of the project - you will not need to change these ! ===

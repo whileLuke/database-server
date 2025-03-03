@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class CommandParser {
+public class CommandParser extends DBServer {
     List<String> tokens = new ArrayList<String>();
 
     public String parseCommand(List<String> tokensList) {
