@@ -52,6 +52,7 @@ public class DBServer {
         // TODO implement your server logic here
         query = command;
         setupQuery();
+        CommandParser.parseCommand(tokens);
         return "";
     }
 
