@@ -19,7 +19,6 @@ public class DBServer {
     private Map<String, Table> tables = new HashMap<>();
     String[] specialCharacters = {"(",")",",",";"};
     ArrayList<String> tokens = new ArrayList<String>();
-    CommandParser parser = new CommandParser();
     public static void main(String args[]) throws IOException {
         DBServer server = new DBServer();
         server.blockingListenOn(8888);
@@ -49,8 +48,8 @@ public class DBServer {
         // TODO implement your server logic here
         query = command;
         setupQuery();
-        parser.parseCommand(tokens);
-        return "";
+        CommandParser parser = new CommandParser();
+        return parser.parseCommand(tokens);
     }
 
     void setupQuery() {
@@ -82,15 +81,29 @@ public class DBServer {
     }
 
     protected boolean createTable(String tableName, List<String> columnNames) {
-        try(FileWriter writer = new FileWriter(storageFolderPath + File.separator + currentDB + File.separator + tableName.toLowerCase() + ".tab")){
-            Table newTable = new Table(null);
-            tables.put(tableName, newTable);
-            writer.write(newTable.toString());
-        } catch(IOException e){
+        if (currentDB == null) {
+            System.out.println("[ERROR] No database selected.");
+            return false;
+        }
+        File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
+        if (tableFile.exists()) {
+            System.out.println("[ERROR] Table already exists.");
+            return false;
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableFile))) {
+            writer.write("id");
+            for (String column : columnNames) {
+                writer.write("\t" + column);
+            }
+            writer.newLine();
+            Table newTable = new Table(columnNames);
+            tables.put(tableName.toLowerCase(), newTable);
+            System.out.println("[OK] Table '" + tableName + "' created.");
+            return true;
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 
     protected boolean createDatabase(String DBName) {

@@ -8,29 +8,43 @@ public class CommandParser extends DBServer {
     List<String> tokens = new ArrayList<String>();
 
     public String parseCommand(List<String> tokensList) {
+        System.out.println("Test 1");
         tokens = tokensList;
         if (tokens.isEmpty()) return "[ERROR] No command entered.";
         if (tokens.size() == 1) return "[ERROR] Command is not long enough.";
         DBCommand d = null;
         switch (tokens.get(0).toUpperCase()) {
-            case "USE" -> d = use();
-            case "CREATE" -> {
+            case "USE":
+                d = use();
+                break;
+            case "CREATE":
+                System.out.println("Test 2");
                 if(Objects.equals(tokens.get(1).toLowerCase(), "table")) d = createTable();
                 else if(Objects.equals(tokens.get(1).toLowerCase(), "database")) d = createDatabase();
-            }
-            case "DROP" -> d = new DropCommand();
-            case "ALTER" -> d = new AlterCommand();
-            case "INSERT" -> d = new InsertCommand();
-            case "SELECT" -> d = new SelectCommand();
-            case "UPDATE" -> d = new UpdateCommand();
-            default -> { return "[ERROR] Invalid command type: " + tokens.get(0) + "."; }
+                break;
+            case "DROP":
+                d = new DropCommand();
+                break;
+            case "ALTER":
+                d = new AlterCommand();
+                break;
+            case "INSERT":
+                d = new InsertCommand();
+                break;
+            case "SELECT":
+                d = new SelectCommand();
+                break;
+            case "UPDATE":
+                d = new UpdateCommand();
+                break;
+            default:
+              return "[ERROR] Invalid command type: " + tokens.get(0) + ".";
         }
         if(d == null){
             return "[ERROR] " + tokens.get(0).toUpperCase() + " command formatted incorrectly.";
         }
-        d.query(this);
+        return d.query(this);
         //DBCommand.parse(tokens.get(0));
-        return tokens.get(0);
     }
 
     private DBCommand use() {
@@ -66,7 +80,8 @@ public class CommandParser extends DBServer {
     }
 
     private DBCommand createDatabase() {
-        if(tokens.size() != 3) return null;
+        if(tokens.size() != 4) return null;
+        if (!tokens.get(3).equals(";")) return null;
         if(tokens.get(2).equals("*")) return null;
         DBCommand d = new CreateDatabaseCommand();
         d.DBName = tokens.get(2);
