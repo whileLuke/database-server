@@ -5,20 +5,21 @@ import java.util.List;
 import java.util.Objects;
 
 public class CommandParser extends DBServer {
-    List<String> tokens = new ArrayList<String>();
-
+    List<String> tokens = new ArrayList<>();
     public String parseCommand(List<String> tokensList) {
         System.out.println("Test 1");
         tokens = tokensList;
+        System.out.println(tokens);
         if (tokens.isEmpty()) return "[ERROR] No command entered.";
         if (tokens.size() == 1) return "[ERROR] Command is not long enough.";
         DBCommand d = null;
         switch (tokens.get(0).toUpperCase()) {
             case "USE":
+                System.out.println("Test 1 bil");
                 d = use();
                 break;
             case "CREATE":
-                System.out.println("Test 2");
+                System.out.println("Test 2 bil");
                 if(Objects.equals(tokens.get(1).toLowerCase(), "table")) d = createTable();
                 else if(Objects.equals(tokens.get(1).toLowerCase(), "database")) d = createDatabase();
                 break;
@@ -58,21 +59,31 @@ public class CommandParser extends DBServer {
     }
 
     private DBCommand createTable() {
+        System.out.println("Test 3 TABLE");
         if(tokens.size() < 3) return null;
         DBCommand d = new CreateTableCommand();
         d.tableNames.add(tokens.get(2));
         //Make sure it's not a star.
-        if(tokens.size() > 3) {
+        System.out.println("Test 5 TABLE");
+        if(tokens.size() > 4) {
+            System.out.println("Test 7 TABLE");
             if(!tokens.get(3).equals("(")) return null;
+            System.out.println("Test 9 TABLE");
             for(int i = 4; i < tokens.size(); i += 2) {
+                System.out.println("Test 11 TABLE");
                 String column = tokens.get(i);
                 if (Objects.equals(column, "*")) return null;
+                System.out.println("Test 13 TABLE");
                 String punctuation = tokens.get(i + 1);
                 d.columnNames.add(column);
                 if(!punctuation.equals(",") && !punctuation.equals(")")) return null;
-                if (punctuation.equals(")"))
-                    if (i == tokens.size() - 1) break; // we've reached the end of attributes
-                    else return null;
+                System.out.println("Test 15 TABLE");
+                if (punctuation.equals(")")) {
+                    return d;
+                    //if (i == tokens.size() - 2) return d; // we've reached the end of attributes
+                    //else return null;
+                }
+                System.out.println("Test 17 TABLE");
                 if(i + 2 >= tokens.size()) return null;
             }
         }

@@ -3,7 +3,9 @@ package edu.uob;
 public class CreateTableCommand extends DBCommand {
     @Override
     public String query(DBServer server) {
+        System.out.println("Create table test");
         if (tableNames.size() != 1) return "[ERROR] Incorrect number of table names selected.";
+        System.out.println("Create table test 2");
         if(server.createTable(tableNames.get(0), columnNames)){
             return "[OK] Created table '" + tableNames + "'.";
         } else {

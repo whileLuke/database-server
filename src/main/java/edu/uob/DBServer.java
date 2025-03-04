@@ -15,7 +15,7 @@ public class DBServer {
     private static final char END_OF_TRANSMISSION = 4;
     private String storageFolderPath;
     private String query;
-    private String currentDB;
+    private static String currentDB;
     private Map<String, Table> tables = new HashMap<>();
     String[] specialCharacters = {"(",")",",",";"};
     ArrayList<String> tokens = new ArrayList<String>();
@@ -46,6 +46,7 @@ public class DBServer {
     */
     public String handleCommand(String command) {
         // TODO implement your server logic here
+        tokens.clear();
         query = command;
         setupQuery();
         CommandParser parser = new CommandParser();
@@ -77,22 +78,28 @@ public class DBServer {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         currentDB = DBName.toLowerCase();
+        System.out.println("CURRENT DB is " + currentDB);
         return true;
     }
 
     protected boolean createTable(String tableName, List<String> columnNames) {
+        System.out.println("Creating table " + tableName + "TEST");
+        System.out.println(currentDB);
         if (currentDB == null) {
             System.out.println("[ERROR] No database selected.");
             return false;
         }
+        System.out.println("Creating table " + tableName + "TEST2");
         File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
         if (tableFile.exists()) {
             System.out.println("[ERROR] Table already exists.");
             return false;
         }
+        System.out.println("Creating table " + tableName + "TEST3");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableFile))) {
             writer.write("id");
             for (String column : columnNames) {
+                System.out.println("Creating table " + tableName + "TEST11");
                 writer.write("\t" + column);
             }
             writer.newLine();
