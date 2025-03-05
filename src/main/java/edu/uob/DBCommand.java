@@ -4,18 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class DBCommand extends CommandParser {
-    String[] commandType;
-    String DBName;
+    String commandType = null;
+    String DBName = null;
     List<String> tableNames = new ArrayList<String>();
     List<String> columnNames = new ArrayList<String>();
-    public static void parse(String s) {
+    List<String> values = new ArrayList<String>();
+    //public static void parse(String s) {
         //conditions, colnames, tablenames, dbname, commandtype
-    }
-    String query(DBServer s) {
-
-        return "";
-    }
-
+    //}
+    public abstract String query(DBServer s);
     //public abstract void query(CommandParser commandParser);
 }
 

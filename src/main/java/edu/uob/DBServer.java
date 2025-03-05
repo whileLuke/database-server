@@ -13,10 +13,10 @@ import java.util.*;
 public class DBServer {
 
     private static final char END_OF_TRANSMISSION = 4;
-    private String storageFolderPath;
+    public String storageFolderPath;
     private String query;
-    private static String currentDB;
-    private Map<String, Table> tables = new HashMap<>();
+    public static String currentDB;
+    Map<String, Table> tables = new HashMap<>();
     String[] specialCharacters = {"(",")",",",";"};
     ArrayList<String> tokens = new ArrayList<String>();
     public static void main(String args[]) throws IOException {
@@ -73,6 +73,32 @@ public class DBServer {
         input = input.trim();
         return input.split(" ");
     }
+
+    public boolean saveCurrentDB() {
+        if (currentDB == null) return false;
+        File dbFolder = new File(storageFolderPath, currentDB);
+        if (!dbFolder.exists() && !dbFolder.mkdirs()) return false;
+        for (Map.Entry<String, Table> entry : tables.entrySet()) {
+            entry.getValue().saveToFile(dbFolder.getPath(), entry.getKey());
+        }
+        return true;
+    }
+
+    public boolean loadDB(String DBName) {
+        File dbFolder = new File(storageFolderPath, DBName);
+        if (!dbFolder.exists() || !dbFolder.isDirectory()) return false;
+        tables.clear();
+        for (File tableFile : Objects.requireNonNull(dbFolder.listFiles((dir, name) -> name.endsWith(".tab")))) {
+            String tableName = tableFile.getName().replace(".tab", "");
+            Table table = Table.loadFromFile(dbFolder.getPath(), tableName);
+            if (table != null) {
+                tables.put(tableName.toLowerCase(), table); // Add table to memory
+            }
+        }
+        currentDB = DBName;
+        return true;
+    }
+
     //protected boool?
     protected boolean useDatabase(String DBName) {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
@@ -122,7 +148,25 @@ public class DBServer {
         //return true;
     }
 
-    //  === Methods below handle networking aspects of the project - you will not need to change these ! ===
+    public boolean deleteDatabase(String DBName) {
+        File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
+        if (!DBDirectory.isDirectory()) return false;
+        return deleteDirectory(DBDirectory);
+    }
+
+    private boolean deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    if (!deleteDirectory(file)) return false;
+                } else if (!file.delete()) return false;
+            }
+        }
+        return directory.delete();
+    }
+
+        //  === Methods below handle networking aspects of the project - you will not need to change these ! ===
 
     public void blockingListenOn(int portNumber) throws IOException {
         try (ServerSocket s = new ServerSocket(portNumber)) {

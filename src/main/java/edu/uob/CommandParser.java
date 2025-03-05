@@ -1,6 +1,7 @@
 package edu.uob;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,19 +25,20 @@ public class CommandParser extends DBServer {
                 else if(Objects.equals(tokens.get(1).toLowerCase(), "database")) d = createDatabase();
                 break;
             case "DROP":
-                d = new DropCommand();
+                if (Objects.equals(tokens.get(1).toLowerCase(), "table")) d = dropTable();
+                else if (Objects.equals(tokens.get(1).toLowerCase(), "database")) d = dropDatabase();
                 break;
             case "ALTER":
-                d = new AlterCommand();
+                d = alterTable();
                 break;
             case "INSERT":
-                d = new InsertCommand();
+                d = insert();
                 break;
             case "SELECT":
-                d = new SelectCommand();
+                d = select();
                 break;
             case "UPDATE":
-                d = new UpdateCommand();
+                d = update();
                 break;
             default:
               return "[ERROR] Invalid command type: " + tokens.get(0) + ".";
@@ -98,6 +100,84 @@ public class CommandParser extends DBServer {
         d.DBName = tokens.get(2);
         return d;
     }
+
+    private DBCommand dropTable() {
+        if (tokens.size() != 4) return null;
+        if (!tokens.get(3).equals(";")) return null;
+
+        DBCommand d = new DropCommand();
+        d.tableNames.add(tokens.get(2));
+        return d;
+    }
+
+    private DBCommand dropDatabase() {
+        if (tokens.size() != 4) return null;
+        if (!tokens.get(3).equals(";")) return null;
+
+        DBCommand d = new DropCommand();
+        d.DBName = tokens.get(2);
+        return d;
+    }
+
+    private DBCommand alterTable() {
+        if (tokens.size() < 6) return null;
+        if (!tokens.get(tokens.size() - 1).equals(";")) return null;
+        DBCommand d = new AlterCommand();
+        d.tableNames.add(tokens.get(2));
+        String operation = tokens.get(3).toUpperCase();
+        if (Objects.equals(operation, "ADD")) {
+            d.commandType = "ADD";
+            d.columnNames.add(tokens.get(4));
+        } else if (Objects.equals(operation, "DROP")) {
+            d.commandType = "DROP";
+            d.columnNames.add(tokens.get(4));
+        } else {
+            return null;
+        }
+        return d;
+    }
+
+    private DBCommand insert() {
+        if (tokens.size() < 5) return null;
+        DBCommand d = new InsertCommand();
+        d.tableNames.add(tokens.get(2));
+        if (!tokens.get(3).equals("VALUES")) return null;
+
+        for (int i = 4; i < tokens.size(); i++) {
+            if (tokens.get(i).equals(";")) break;
+            d.values.add(tokens.get(i).replace("", "'"));
+        }
+        return d;
+    }
+
+    private DBCommand select() {
+        if (tokens.size() < 4) return null;
+        DBCommand d = new SelectCommand();
+        if (tokens.get(1).equals("*")) d.columnNames.add("*");
+        else {
+            for (String column : tokens.get(1).split(",")) {
+                d.columnNames.add(column);
+            }
+        }
+        if (!tokens.get(2).equals("FROM")) return null;
+        d.tableNames.add(tokens.get(3));
+        return d;
+    }
+
+    private DBCommand update() {
+        if (tokens.size() < 7) return null;
+        DBCommand d = new UpdateCommand();
+        d.tableNames.add(tokens.get(1));
+        if (!tokens.get(2).equals("SET")) return null;
+        for (int i = 3; i < tokens.size(); i += 4) {
+            if (!tokens.get(i + 1).equals("=")) return null;
+            d.columnNames.add(tokens.get(i)); // Column name
+            d.values.add(tokens.get(i + 2).replace("'", "")); // Column value
+            if (tokens.get(i + 3).equals(";")) break;
+        }
+        return d;
+    }
+
 }
 
 

@@ -1,13 +1,11 @@
 package edu.uob;
 
 public class UseCommand extends DBCommand {
-    @Override
+    //@Override
     public String query(DBServer server) {
-        if (server.useDatabase(DBName)) {
-            return "[OK] Switched to database " + DBName + ".";
-        } else {
-            return "[ERROR] Database " + DBName + " does not exist.";
-        }
+        if (DBName == null) return "[ERROR] No database name specified.";
+        if (server.loadDB(DBName)) return "[OK] Switched to database " + DBName + ".";
+        else return "[ERROR] Database " + DBName + " does not exist.";
     }
 
 }
