@@ -1,19 +1,34 @@
 package edu.uob;
 
+import java.util.ArrayList;
+
 public class CreateTableCommand extends DBCommand {
-    //@Override
+    @Override
     public String query(DBServer server) {
         System.out.println("Create table test");
-        if (tableNames.isEmpty() || columnNames.isEmpty()) return "[ERROR] Table names or column names have not been defined.";
+        if (tableNames.isEmpty()) return "[ERROR] Table name not specified.";
         if (tableNames.size() != 1) return "[ERROR] Incorrect number of table names selected.";
-        String tableName = tableNames.get(0);
-        if (server.tables.containsKey(tableName.toLowerCase())) return "[ERROR] Table already exists.";
+        if (server.currentDB == null) return "[ERROR] No database selected. Use 'USE database;' first.";
+        String tableName = tableNames.get(0).toLowerCase();
+        if (server.tables.containsKey(tableName)) return "[ERROR] Table already exists.";
         System.out.println("Create table test 2");
-        if(server.createTable(tableName, columnNames)){
-            server.saveCurrentDB();
+        //if(server.createTable(tableName, columnNames)){
+        //    server.saveCurrentDB();
+        //    return "[OK] Created table '" + tableName + "'.";
+        //} else {
+        //    return "[ERROR] Could not create table '" + tableName + "'.";
+        //}
+        //THIS COULD MESS IT UP
+        if (!columnNames.contains("id")) {
+            columnNames.add(0, "id");
+        }
+        Table newTable = new Table(new ArrayList<>(columnNames));
+        server.tables.put(tableName, newTable);
+        if (server.saveCurrentDB()) {
             return "[OK] Created table '" + tableName + "'.";
         } else {
-            return "[ERROR] Could not create table '" + tableName + "'.";
+            server.tables.remove(tableName);
+            return "[ERROR] Failed to save table '" + tableName + "' to disk.";
         }
     }
 

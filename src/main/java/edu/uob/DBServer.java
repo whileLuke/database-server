@@ -19,6 +19,7 @@ public class DBServer {
     Map<String, Table> tables = new HashMap<>();
     String[] specialCharacters = {"(",")",",",";"};
     ArrayList<String> tokens = new ArrayList<String>();
+
     public static void main(String args[]) throws IOException {
         DBServer server = new DBServer();
         server.blockingListenOn(8888);
@@ -76,26 +77,36 @@ public class DBServer {
 
     public boolean saveCurrentDB() {
         if (currentDB == null) return false;
-        File dbFolder = new File(storageFolderPath, currentDB);
-        if (!dbFolder.exists() && !dbFolder.mkdirs()) return false;
+        File DBDirectory = new File(storageFolderPath, currentDB);
+        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) return false;
         for (Map.Entry<String, Table> entry : tables.entrySet()) {
-            entry.getValue().saveToFile(dbFolder.getPath(), entry.getKey());
+            entry.getValue().saveToFile(DBDirectory.getPath(), entry.getKey());
         }
         return true;
     }
 
     public boolean loadDB(String DBName) {
-        File dbFolder = new File(storageFolderPath, DBName);
-        if (!dbFolder.exists() || !dbFolder.isDirectory()) return false;
+        File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
+        if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         tables.clear();
-        for (File tableFile : Objects.requireNonNull(dbFolder.listFiles((dir, name) -> name.endsWith(".tab")))) {
+        /*for (File tableFile : Objects.requireNonNull(DBDirectory.listFiles((dir, name) -> name.endsWith(".tab")))) {
             String tableName = tableFile.getName().replace(".tab", "");
-            Table table = Table.loadFromFile(dbFolder.getPath(), tableName);
+            Table table = Table.loadFromFile(DBDirectory.getPath(), tableName);
             if (table != null) {
                 tables.put(tableName.toLowerCase(), table); // Add table to memory
             }
+        }*/
+        File[] tableFiles = DBDirectory.listFiles((dir, name) -> name.endsWith(".tab"));
+        if (tableFiles != null) {
+            for (File tableFile : tableFiles) {
+                String tableName = tableFile.getName().replace(".tab", "");
+                Table table = Table.loadFromFile(DBDirectory.getPath(), tableName);
+                if (table != null) {
+                    tables.put(tableName.toLowerCase(), table); // Use lowercase keys for consistency
+                }
+            }
         }
-        currentDB = DBName;
+        currentDB = DBName.toLowerCase();
         return true;
     }
 
@@ -103,9 +114,7 @@ public class DBServer {
     protected boolean useDatabase(String DBName) {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
-        currentDB = DBName.toLowerCase();
-        System.out.println("CURRENT DB is " + currentDB);
-        return true;
+        return loadDB(DBName.toLowerCase());
     }
 
     protected boolean createTable(String tableName, List<String> columnNames) {
@@ -115,7 +124,7 @@ public class DBServer {
             System.out.println("[ERROR] No database selected.");
             return false;
         }
-        System.out.println("Creating table " + tableName + "TEST2");
+        /*System.out.println("Creating table " + tableName + "TEST2");
         File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
         if (tableFile.exists()) {
             System.out.println("[ERROR] Table already exists.");
@@ -136,7 +145,16 @@ public class DBServer {
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }*/
+        if (tables.containsKey(tableName.toLowerCase())) {
+            return false;
         }
+        if (!columnNames.contains("id")) {
+            columnNames.add(0, "id");
+        }
+        tables.put(tableName.toLowerCase(), new Table(columnNames)); // Add table to memory
+        saveCurrentDB(); // Persist changes to disk
+        return true;
     }
 
     protected boolean createDatabase(String DBName) {
@@ -150,7 +168,11 @@ public class DBServer {
 
     public boolean deleteDatabase(String DBName) {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
-        if (!DBDirectory.isDirectory()) return false;
+        if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
+        if (currentDB != null && currentDB.equalsIgnoreCase(DBName)) {
+            tables.clear();
+            currentDB = null;
+        }
         return deleteDirectory(DBDirectory);
     }
 

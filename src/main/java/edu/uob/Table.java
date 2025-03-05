@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Table implements Serializable {
-    //private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     private final List<String> columns;
     private final List<List<String>> rows;
 
     public Table(List<String> columns) {
-        this.columns = columns;
+        this.columns = new ArrayList<>(columns);
         this.rows = new ArrayList<>();
     }
 
@@ -111,18 +111,26 @@ public class Table implements Serializable {
                 row.set(updateIndexes.get(i), newValues.get(i));
             }
         }
-        return true; // Rows updated successfully
+        return true;
     }
 
     public int generateNextID() {
         int idColumnIndex = columns.indexOf("id");
-        if (idColumnIndex == -1) throw new IllegalStateException("The table does not have an 'ID' column.");
+        if (idColumnIndex == -1) {
+            // Add id column if it doesn't exist
+            columns.add(0, "id");
+            for (List<String> row : rows) {
+                row.add(0, "0");
+            }
+            idColumnIndex = 0;
+        }
         int maxID = 0;
         for (List<String> row : rows) {
             try {
                 int currentID = Integer.parseInt(row.get(idColumnIndex));
                 if (currentID > maxID) maxID = currentID;
             } catch (NumberFormatException ignored) {
+                // Skip non-numeric values
             }
         }
         return maxID + 1;
@@ -133,6 +141,7 @@ public class Table implements Serializable {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tableFile))) {
             oos.writeObject(this); // Serialize table data
         } catch (IOException e) {
+            System.err.println("Error saving table " + tableName + ": " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -145,6 +154,7 @@ public class Table implements Serializable {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(tableFile))) {
             return (Table) ois.readObject(); // Deserialize table data
         } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading table " + tableName + ": " + e.getMessage());
             e.printStackTrace();
             return null;
         }

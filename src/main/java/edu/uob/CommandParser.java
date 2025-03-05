@@ -141,7 +141,7 @@ public class CommandParser extends DBServer {
         if (tokens.size() < 5) return null;
         DBCommand d = new InsertCommand();
         d.tableNames.add(tokens.get(2));
-        if (!tokens.get(3).equals("VALUES")) return null;
+        if (!tokens.get(3).equalsIgnoreCase("values")) return null;
 
         for (int i = 4; i < tokens.size(); i++) {
             if (tokens.get(i).equals(";")) break;

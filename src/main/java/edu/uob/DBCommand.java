@@ -3,16 +3,16 @@ package edu.uob;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DBCommand extends CommandParser {
-    String commandType = null;
-    String DBName = null;
-    List<String> tableNames = new ArrayList<String>();
-    List<String> columnNames = new ArrayList<String>();
-    List<String> values = new ArrayList<String>();
+public abstract class DBCommand /*extends CommandParser*/ {
+    public String commandType;
+    public String DBName;
+    public List<String> tableNames = new ArrayList<>();
+    public List<String> columnNames = new ArrayList<>();
+    public List<String> values = new ArrayList<>();
     //public static void parse(String s) {
         //conditions, colnames, tablenames, dbname, commandtype
     //}
-    public abstract String query(DBServer s);
+    public abstract String query(DBServer server);
     //public abstract void query(CommandParser commandParser);
 }
 
