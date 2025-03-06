@@ -62,7 +62,8 @@ public class CommandParser extends DBServer {
 
     private DBCommand createTable() {
         System.out.println("Test 3 TABLE");
-        if(tokens.size() < 3) return null;
+        if(tokens.size() < 4) return null;
+        if (!Objects.equals(tokens.get(tokens.size() - 1), ";")) return null;
         DBCommand d = new CreateTableCommand();
         d.tableNames.add(tokens.get(2));
         //Make sure it's not a star.
