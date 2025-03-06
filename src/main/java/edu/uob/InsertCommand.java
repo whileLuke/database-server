@@ -1,5 +1,6 @@
 package edu.uob;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class InsertCommand extends DBCommand {
@@ -9,7 +10,11 @@ public class InsertCommand extends DBCommand {
             return "[ERROR] Table name or values for insertion are missing.";
         }
         String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/;
+        //REDO THIS. LIKE HOW I REDID DROP TABLE.
+        File tableFile = new File(server.storageFolderPath + File.separator + DBServer.currentDB, tableName.toLowerCase() + ".tab");
         Table table = server.tables.get(tableName);
+        //REDO THIS. LIKE HOW I REDID DROP TABLE.
+        //basically server.tables is NEVERRRR containing tables annoyingly
         if (table == null) {
             return "[ERROR] Table '" + tableName + "' does not exist.";
         }
