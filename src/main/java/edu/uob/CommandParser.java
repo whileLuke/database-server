@@ -1,5 +1,6 @@
 package edu.uob;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.Objects;
 
 public class CommandParser extends DBServer {
     List<String> tokens = new ArrayList<>();
-    public String parseCommand(List<String> tokensList) {
+    public String parseCommand(List<String> tokensList) throws IOException {
         System.out.println("Test 1");
         tokens = tokensList;
         System.out.println(tokens);
@@ -61,6 +62,7 @@ public class CommandParser extends DBServer {
     }
 
     private DBCommand createTable() {
+        //is createtablecommand getting called too soon?
         System.out.println("Test 3 TABLE");
         if(tokens.size() < 4) return null;
         if (!Objects.equals(tokens.get(tokens.size() - 1), ";")) return null;
@@ -82,6 +84,10 @@ public class CommandParser extends DBServer {
                 if(!punctuation.equals(",") && !punctuation.equals(")")) return null;
                 System.out.println("Test 15 TABLE");
                 if (punctuation.equals(")")) {
+                    System.out.println("tablenames = " + d.tableNames + ", columns = " + d.columnNames);
+                    tables.put(d.tableNames.get(0), new Table(d.columnNames)); //remember to include id
+                    System.out.println("TABLES IS EQUAL TO" + tables);
+                    System.out.println("tablenames = " + d.tableNames + ", columns = " + d.columnNames);
                     return d;
                     //if (i == tokens.size() - 2) return d; // we've reached the end of attributes
                     //else return null;
@@ -90,6 +96,10 @@ public class CommandParser extends DBServer {
                 if(i + 2 >= tokens.size()) return null;
             }
         }
+        System.out.println("OTHGER tablenames = " + d.tableNames + ", columns = " + d.columnNames);
+        tables.put(d.tableNames.get(0), new Table(d.columnNames));
+        System.out.println("OTHER TABLES IS EQUAL TO" + tables);
+        System.out.println("OTHGER tablenames = " + d.tableNames + ", columns = " + d.columnNames);
         return d;
     }
 
@@ -140,13 +150,17 @@ public class CommandParser extends DBServer {
 
     private DBCommand insert() {
         if (tokens.size() < 5) return null;
+        //Check for the correct brackets, comas, semicolon.
+        //Can check for semicolon at start
+        if(!tokens.get(tokens.size() - 1).equals(";")) return null;
         DBCommand d = new InsertCommand();
         d.tableNames.add(tokens.get(2));
         if (!tokens.get(3).equalsIgnoreCase("values")) return null;
 
         for (int i = 4; i < tokens.size(); i++) {
-            if (tokens.get(i).equals(";")) break;
-            d.values.add(tokens.get(i).replace("", "'"));
+            String token = tokens.get(i).replace(",", "").replace("(", "").replace(")", "").trim();
+            if (token.equals(";")) break;
+            if (!token.isEmpty()) d.values.add(token);
         }
         return d;
     }
@@ -162,7 +176,17 @@ public class CommandParser extends DBServer {
         }
         if (!tokens.get(2).equals("FROM")) return null;
         d.tableNames.add(tokens.get(3));
+        if (tokens.size() > 4 && tokens.get(4).equals("WHERE")) {
+            int i = 5;
+            while (i < tokens.size()) {
+                d.setCondition(tokens.get(i));
+                i++;
+            }
+        }
         return d;
+    }
+
+    private Object parseCondition() {
     }
 
     private DBCommand update() {

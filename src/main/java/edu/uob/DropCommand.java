@@ -1,20 +1,21 @@
 package edu.uob;
 
 import java.io.File;
+import java.io.IOException;
 
 public class DropCommand extends DBCommand {
     @Override
-    public String query(DBServer server) {
+    public String query(DBServer server) throws IOException {
         if (!tableNames.isEmpty()) {
             String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/;
             System.out.println("Table name is " + tableName);
-            System.out.println("Server.tables is" + server.tables);
+            System.out.println("Server.tables is" + tables);
             //check the current db for tables instead.
-            File tableFile = new File(server.storageFolderPath + File.separator + DBServer.currentDB, tableName.toLowerCase() + ".tab");
+            File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
             if (tableFile.exists()) {
                 tableFile.delete(); // Remove table file from disk
             }
-            server.saveCurrentDB();
+            saveCurrentDB();
             return "[OK] Dropped table '" + tableName + "'.";
         } /*else {
             return "[ERROR] Table does not exist.";*/

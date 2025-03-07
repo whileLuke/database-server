@@ -1,9 +1,10 @@
 package edu.uob;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DBCommand /*extends CommandParser*/ {
+public abstract class DBCommand extends CommandParser {
     public String commandType;
     public String DBName;
     public List<String> tableNames = new ArrayList<>();
@@ -12,7 +13,7 @@ public abstract class DBCommand /*extends CommandParser*/ {
     //public static void parse(String s) {
         //conditions, colnames, tablenames, dbname, commandtype
     //}
-    public abstract String query(DBServer server);
+    public abstract String query(DBServer server) throws IOException;
     //public abstract void query(CommandParser commandParser);
 }
 

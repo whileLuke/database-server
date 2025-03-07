@@ -1,14 +1,17 @@
 package edu.uob;
 
+import java.io.IOException;
+
 public class AlterCommand extends DBCommand {
     @Override
-    public String query(DBServer server) {
+    public String query(DBServer server) throws IOException {
+        loadTables(currentDB);
         if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) {
             return "[ERROR] Invalid ALTER TABLE command format.";
         }
         String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/; // Only one table name is allowed
         String columnName = columnNames.get(0); // Only one column name is allowed
-        Table table = server.tables.get(tableName);
+        Table table = tables.get(tableName);
         if (table == null) {
             return "[ERROR] Table '" + tableName + "' does not exist.";
         }
@@ -26,7 +29,7 @@ public class AlterCommand extends DBCommand {
         } else {
             return "[ERROR] Unknown ALTER operation: " + commandType;
         }
-        if (server.saveCurrentDB()) {
+        if (saveCurrentDB()) {
             return "[OK] Table '" + tableName + "' altered.";
         } else {
             return "[ERROR] Failed to save altered table to disk.";
