@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Table implements Serializable {
+    private static final String FILE_EXTENSION = ".tab";
     private static final long serialVersionUID = 1L;
     private final List<String> columns;
     private final List<List<String>> rows;
@@ -137,17 +138,48 @@ public class Table implements Serializable {
     }
 
     public void saveToFile(String databasePath, String tableName) {
-        File tableFile = new File(databasePath, tableName + ".tab");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tableFile))) {
-            oos.writeObject(this); // Serialize table data
+        File tableFile = new File(databasePath, tableName + FILE_EXTENSION);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableFile))) {
+            writer.write("id");
+
+            for (String column : columnNames) {
+                debugLog("Creating table " + tableName + "TEST11");
+                writer.write("\t" + column);
+            }
+
+            writer.newLine();
+
+            tables.put(tableName.toLowerCase(), new Table(columnNames));
+            debugLog("[OK] Table '" + tableName + "' created.");
+
+            return true;
         } catch (IOException e) {
-            System.err.println("Error saving table " + tableName + ": " + e.getMessage());
+            getLogger().severe("Error saving table " + tableName + ": " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
 
+    private void debugLog(String message) {
+        // Check if debugging is enabled before printing the message.
+        if (isDebugEnabled()) {
+            System.out.println(message);
+        }
+    }
+
+    private Logger getLogger() {
+        // Get the logger
+        return Logger.getLogger(getClass().getName());
+    }
+
+    private boolean isDebugEnabled() {
+        // Determine if debugging is enabled.
+        return true;
+    }
+
+
     public static Table loadFromFile(String databasePath, String tableName) {
-        File tableFile = new File(databasePath, tableName + ".tab");
+        File tableFile = new File(databasePath, tableName + FILE_EXTENSION);
         if (!tableFile.exists()) {
             return null;
         }
