@@ -15,11 +15,12 @@ public class SelectCommand extends DBCommand {
         String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/;
         Table table = tables.get(tableName);
         if (table == null) return "[ERROR] Table '" + tableName + "' does not exist.";
-
         if (conditions.isEmpty()) {
-            return columnNames.contains("*") ? table.selectAllColumns() : table.selectColumns(columnNames);
+            if (columnNames.contains("*")) return table.selectAllColumns();
+            else return table.selectColumns(columnNames);
         } else {
-            return columnNames.contains("*") ? table.selectAllColumns(conditions) : table.selectColumns(columnNames, conditions);
+            if (columnNames.contains("*")) return table.selectAllColumns(conditions);
+            else return table.selectColumns(columnNames, conditions);
         }
     }
 }
