@@ -11,12 +11,23 @@ public class DropCommand extends DBCommand {
             System.out.println("Table name is " + tableName);
             System.out.println("Server.tables is" + tables);
             //check the current db for tables instead.
-            File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
-            if (tableFile.exists()) {
-                tableFile.delete(); // Remove table file from disk
+            //This is not working properly
+            File tableFile = new File(server.storageFolderPath + File.separator + currentDB,tableName + ".tab");
+            System.out.println("Attempting to delete table: " + tableName);
+            System.out.println("Expected table file path: " + tableFile.getAbsolutePath());
+            System.out.println("File exists: " + tableFile.exists());
+
+            if (!tableFile.exists()) {
+                return "[ERROR] Table '" + tableName + "' does not exist in the current database.";
             }
-            saveCurrentDB();
-            return "[OK] Dropped table '" + tableName + "'.";
+            if (tableFile.delete()) {
+                server.tables.remove(tableName); // Remove the table from in-memory representation
+                server.saveCurrentDB(); // Save database state to persist changes
+                return "[OK] Dropped table '" + tableName + "'.";
+            } else {
+                return "[ERROR] Failed to delete the table file for '" + tableName + "'.";
+            }
+
         } /*else {
             return "[ERROR] Table does not exist.";*/
         else if (DBName != null) {

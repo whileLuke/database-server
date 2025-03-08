@@ -21,7 +21,7 @@ public class DBServer {
     String[] specialCharacters = {"(",")",",",";"};
     ArrayList<String> tokens = new ArrayList<String>();
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
         server.blockingListenOn(8889);
     }
@@ -46,7 +46,7 @@ public class DBServer {
     *
     * <p>This method handles all incoming DB commands and carries out the required actions.
     */
-    public String handleCommand(String command) throws IOException {
+    public String handleCommand(String command) throws IOException, Exception {
         // TODO implement your server logic here
         tokens.clear();
         query = command;
@@ -192,7 +192,7 @@ public class DBServer {
 
         //  === Methods below handle networking aspects of the project - you will not need to change these ! ===
 
-    public void blockingListenOn(int portNumber) throws IOException {
+    public void blockingListenOn(int portNumber) throws IOException, Exception {
         try (ServerSocket s = new ServerSocket(portNumber)) {
             System.out.println("Server listening on port " + portNumber);
             while (!Thread.interrupted()) {
@@ -207,7 +207,7 @@ public class DBServer {
         }
     }
 
-    private void blockingHandleConnection(ServerSocket serverSocket) throws IOException {
+    private void blockingHandleConnection(ServerSocket serverSocket) throws IOException, Exception {
         try (Socket s = serverSocket.accept();
         BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()))) {

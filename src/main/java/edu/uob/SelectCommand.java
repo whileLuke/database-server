@@ -9,7 +9,7 @@ public class SelectCommand extends DBCommand {
     public void setCondition(String condition) { this.conditions.add(condition); }
 
     @Override
-    public String query(DBServer server) {
+    public String query(DBServer server) throws Exception {
         //loadTables(currentDB);
         if (tableNames.isEmpty()) return "[ERROR] Table name missing in SELECT query.";
         String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/;

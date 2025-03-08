@@ -2,6 +2,7 @@ package edu.uob;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class Table implements Serializable {
         if (columns.contains(columnName)) return false;
         columns.add(columnName);
         for (List<String> row : rows) {
-            row.add("");
+            row.add("NULL");
         }
         return true;
     }
@@ -78,16 +79,47 @@ public class Table implements Serializable {
         return result.toString();
     }
 
-    public String selectAllColumns(List<String> conditions) {
-        StringBuilder result = new StringBuilder();
-        result.append(String.join(" | ", columns)).append("\n");
+    public String selectAllColumns(List<String> conditions) throws Exception {
+        List<List<String>> selectedRows = new ArrayList<>();
 
         for (List<String> row : rows) {
             if (isRowMatchConditions(row, conditions)) {
-                result.append(String.join(" | ", row)).append("\n");
+                selectedRows.add(row);
             }
         }
 
+        return formatRows(columns, selectedRows);
+
+        //
+//
+//
+//        StringBuilder result = new StringBuilder();
+//        result.append(String.join(" | ", columns)).append("\n");
+//
+//        for (List<String> row : rows) {
+//            if (isRowMatchConditions(row, conditions)) {
+//                result.append(String.join(" | ", row)).append("\n");
+//            }
+//        }
+//
+//        return result.toString();
+    }
+
+    private String formatRows(List<String> columns, List<List<String>> selectedRows) {
+        StringBuilder result = new StringBuilder();
+
+        // Add column headers as the first line
+        result.append(String.join("\t", columns)).append("\n");
+
+        // Add each row of data
+        for (List<String> row : selectedRows) {
+            result.append(String.join("\t", row)).append("\n");
+        }
+
+        // Remove the final newline for cleaner output, if there is any data
+        if (result.length() > 0) {
+            result.setLength(result.length() - 1); // Trim last '\n'
+        }
         return result.toString();
     }
 
@@ -111,7 +143,7 @@ public class Table implements Serializable {
         return result.toString();
     }
 
-    public String selectColumns(List<String> selectedColumns, List<String> conditions) {
+    public String selectColumns(List<String> selectedColumns, List<String> conditions) throws Exception {
         StringBuilder result = new StringBuilder();
         List<Integer> columnIndexes = getColumnIndexes(selectedColumns);
         if (columnIndexes.isEmpty()) {
@@ -147,97 +179,46 @@ public class Table implements Serializable {
     }
 
     private boolean isRowMatchConditions(List<String> row, List<String> conditions) throws Exception {
-        for (String condition : conditions) {
-            // Use regex to split by operators
-            List<String> parts = Arrays.asList(condition.split("(==|!=|>=|<=|<|>| LIKE )"));
-            if (parts.size() != 3) {
-                throw new Exception("[ERROR] Invalid WHERE clause format in '" + condition + "'.");
-            }
-
-            String column = parts.get(1).trim();
-            String operator = parts.get(2).trim();
-            String value = parts.get(3).trim();
-
-            int columnIndex = columns.indexOf(column);
-            if (columnIndex == -1) {
-                throw new Exception("[ERROR] Column '" + column + "' does not exist.");
-            }
-
-            // Now that we have the column value from the row, compare it with the value from the condition
-            String rowValue = row.get(columnIndex).trim();
-
-            // Check if the operator is LIKE or not
-            if (operator.equals("LIKE")) {
-                // For LIKE operator, we consider that '%' can be at the beginning/end/both/nor of the value
-                // Please be aware, this is very basic implementation and doesn't cover all SQL LIKE operator features
-                if (value.startsWith("%") && value.endsWith("%")) {
-                    if (!rowValue.contains(value.substring(1, value.length() - 1))) {
-                        return false;
-                    }
-                } else if (value.startsWith("%")) {
-                    if (!rowValue.endsWith(value.substring(1))) {
-                        return false;
-                    }
-                } else if (value.endsWith("%")) {
-                    if (!rowValue.startsWith(value.substring(0, value.length() - 1))) {
-                        return false;
-                    }
-                } else {
-                    if (!rowValue.equals(value)) {
-                        return false;
-                    }
-                }
+        boolean result = evaluateCondition(row, conditions.get(0)); // First condition
+        for (int i = 1; i < conditions.size(); i += 2) {
+            String logicalOperator = conditions.get(i); // AND / OR
+            boolean nextConditionResult = evaluateCondition(row, conditions.get(i + 1));
+            if (logicalOperator.equalsIgnoreCase("AND")) {
+                result = result && nextConditionResult;
+            } else if (logicalOperator.equalsIgnoreCase("OR")) {
+                result = result || nextConditionResult;
             } else {
-                // For non-LIKE operators, compare the numerical values
-                double rowValueNum;
-                double valueNum;
-                try {
-                    rowValueNum = Double.parseDouble(rowValue);
-                    valueNum = Double.parseDouble(value);
-                } catch (NumberFormatException e) {
-                    throw new Exception("[ERROR] Invalid comparison between non-numeric values in condition '" + condition + "'.");
-                }
-
-                switch (operator) {
-                    case "==":
-                        if (rowValueNum != valueNum) {
-                            return false;
-                        }
-                        break;
-                    case "!=":
-                        if (rowValueNum == valueNum) {
-                            return false;
-                        }
-                        break;
-                    case ">":
-                        if (rowValueNum <= valueNum) {
-                            return false;
-                        }
-                        break;
-                    case "<":
-                        if (rowValueNum >= valueNum) {
-                            return false;
-                        }
-                        break;
-                    case ">=":
-                        if (rowValueNum < valueNum) {
-                            return false;
-                        }
-                        break;
-                    case "<=":
-                        if (rowValueNum > valueNum) {
-                            return false;
-                        }
-                        break;
-                    default:
-                        throw new Exception("[ERROR] Invalid operator '"+ operator +"' in condition '" + condition + "'.");
-                }
+                throw new Exception("[ERROR] Invalid logical operator: " + logicalOperator);
             }
         }
-        return true;  // If none of the conditions failed, this row matches all conditions
+        return result;
     }
 
-    public boolean updateRows(List<String> columnNamesToUpdate, List<String> newValues) {
+    private boolean evaluateCondition(List<String> row, String condition) {
+        // Parse condition (e.g., "columnName = value")
+        String[] conditionParts = condition.split("\\s+");
+        if (conditionParts.length != 3) return false;
+        String columnName = conditionParts[0];
+        String operator = conditionParts[1];
+        String value = conditionParts[2];
+
+        int columnIndex = columns.indexOf(columnName);
+        if (columnIndex == -1) return false; // Column doesn't exist
+        String cellValue = row.get(columnIndex);
+
+        // Evaluate based on operator
+        return switch (operator) {
+            case "=" -> cellValue.equals(value);
+            case "!=" -> !cellValue.equals(value);
+            case ">" -> Double.parseDouble(cellValue) > Double.parseDouble(value);
+            case ">=" -> Double.parseDouble(cellValue) >= Double.parseDouble(value);
+            case "<" -> Double.parseDouble(cellValue) < Double.parseDouble(value);
+            case "<=" -> Double.parseDouble(cellValue) <= Double.parseDouble(value);
+            default -> false; // Invalid operator
+        };
+    }
+
+        public boolean updateRows(List<String> columnNamesToUpdate, List<String> newValues) {
         if (columnNamesToUpdate.size() != newValues.size()) {
             return false;
         }
@@ -313,18 +294,44 @@ public class Table implements Serializable {
     }
 
 
+
+    //DO A BUFFEREDREADER INSTEAD.
+
     public static Table loadFromFile(String databasePath, String tableName) {
-        File tableFile = new File(databasePath, tableName + FILE_EXTENSION);
+        File tableFile = new File(databasePath, tableName + FILE_EXTENSION); // Ensure consistency with the extension
         if (!tableFile.exists()) {
             return null;
         }
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(tableFile))) {
-            return (Table) ois.readObject(); // Deserialize table data
-        } catch (IOException | ClassNotFoundException e) {
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(tableFile))) {
+            List<String> columnNames = new ArrayList<>();
+            List<List<String>> rows = new ArrayList<>();
+
+            String line = reader.readLine();
+            if (line != null) {
+                // First line contains column names
+                columnNames = Arrays.asList(line.split("\t")); // Assuming columns are tab-separated
+            }
+
+            // Read the rest of the file for rows
+            while ((line = reader.readLine()) != null) {
+                List<String> row = Arrays.asList(line.split("\t")); // Assuming rows are tab-separated
+                rows.add(row);
+            }
+
+            // Build the table object
+            Table table = new Table(columnNames);
+            for (List<String> row : rows) {
+                table.addRow(row);
+            }
+
+            return table;
+        } catch (IOException e) {
             System.err.println("Error loading table " + tableName + ": " + e.getMessage());
             e.printStackTrace();
             return null;
         }
+
     }
 
     //public String selectColumnsWithCondition(List<String> columnNames, Condition condition) {

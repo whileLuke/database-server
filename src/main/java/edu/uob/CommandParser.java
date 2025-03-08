@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public class CommandParser extends DBServer {
     List<String> tokens = new ArrayList<>();
-    public String parseCommand(List<String> tokensList) throws IOException {
+    public String parseCommand(List<String> tokensList) throws Exception {
         System.out.println("Test 1");
         tokens = tokensList;
         System.out.println(tokens);
@@ -166,27 +166,55 @@ public class CommandParser extends DBServer {
     }
 
     private DBCommand select() {
-        if (tokens.size() < 4) return null;
-        DBCommand d = new SelectCommand();
-        if (tokens.get(1).equals("*")) d.columnNames.add("*");
-        else {
-            for (String column : tokens.get(1).split(",")) {
-                d.columnNames.add(column);
+        SelectCommand selectCmd = new SelectCommand();
+        // Assume tokens are already prepared
+        int index = 1; // Start after "SELECT"
+
+        // Parse columns
+        if (tokens.get(index).equals("*")) {
+            selectCmd.columnNames.add("*");
+            index++; // Move past "*"
+        } else {
+            // Parse column list
+            while (!tokens.get(index).equalsIgnoreCase("FROM")) {
+                selectCmd.columnNames.add(tokens.get(index));
+                index++; // Move through column list
+                if (tokens.get(index).equals(",")) index++; // Skip commas
             }
         }
-        if (!tokens.get(2).equals("FROM")) return null;
-        d.tableNames.add(tokens.get(3));
-        if (tokens.size() > 4 && tokens.get(4).equals("WHERE")) {
-            int i = 5;
-            while (i < tokens.size()) {
-                d.setCondition(tokens.get(i));
-                i++;
+
+        // Parse table name
+        if (tokens.get(index).equalsIgnoreCase("FROM")) {
+            index++; // Move past "FROM"
+            selectCmd.tableNames.add(tokens.get(index)); // Add table name
+            index++;
+        }
+
+        // Parse conditions (if present)
+        if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("WHERE")) {
+            index++; // Move past "WHERE"
+            StringBuilder conditionBuilder = new StringBuilder();
+            while (index < tokens.size()) {
+                String token = tokens.get(index);
+                if (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR")) {
+                    selectCmd.setCondition(conditionBuilder.toString().trim());
+                    selectCmd.setCondition(token); // Logical operator
+                    conditionBuilder = new StringBuilder();
+                } else {
+                    conditionBuilder.append(token).append(" ");
+                }
+                index++;
+            }
+            if (conditionBuilder.length() > 0) {
+                selectCmd.setCondition(conditionBuilder.toString().trim());
             }
         }
-        return d;
+        return selectCmd;
     }
 
+
     private Object parseCondition() {
+        return null;
     }
 
     private DBCommand update() {
