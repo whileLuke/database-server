@@ -12,7 +12,7 @@ public class SelectCommand extends DBCommand {
     public String query(DBServer server) throws Exception {
         //loadTables(currentDB);
         if (currentDB == null) return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-
+        System.out.println("Tokens: " + tokens);
         if (tableNames.isEmpty()) return "[ERROR] Table name missing in SELECT query.";
         String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/;
         Table table = tables.get(tableName);

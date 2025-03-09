@@ -138,6 +138,7 @@ public class Table implements Serializable {
     }
 
 
+
    /* private List<Integer> getColumnIndexes(List<String> selectedColumns) {
         List<Integer> indexes = new ArrayList<>();
         for (String column : selectedColumns) {

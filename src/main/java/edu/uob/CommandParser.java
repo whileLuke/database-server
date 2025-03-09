@@ -169,27 +169,36 @@ public class CommandParser extends DBServer {
     private DBCommand select() {
         SelectCommand selectCmd = new SelectCommand();
         // Assume tokens are already prepared
-        int index = 1; // Start after "SELECT"
-
+        if (tokens == null || tokens.isEmpty() || !tokens.get(0).equalsIgnoreCase("SELECT")) {
+            // Return null or throw an exception for invalid command
+            return null;
+        }
+        int index = 1;
         // Parse columns
         if (tokens.get(index).equals("*")) {
             selectCmd.columnNames.add("*");
             index++; // Move past "*"
         } else {
             // Parse column list
-            while (!tokens.get(index).equalsIgnoreCase("FROM")) {
+            while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("FROM")) {
                 selectCmd.columnNames.add(tokens.get(index));
-                index++; // Move through column list
-                if (tokens.get(index).equals(",")) index++; // Skip commas
+                index++;
+                if (index < tokens.size() && tokens.get(index).equals(",")) {
+                    index++; // Skip commas
+                }
             }
         }
 
-        // Parse table name
-        if (tokens.get(index).equalsIgnoreCase("FROM")) {
-            index++; // Move past "FROM"
-            selectCmd.tableNames.add(tokens.get(index)); // Add table name
-            index++;
+        if (index >= tokens.size() || !tokens.get(index).equalsIgnoreCase("FROM")) {
+            return null; // Missing "FROM" keyword
         }
+
+        index++; // Move past "FROM"
+        if (index >= tokens.size()) {
+            return null; // Missing table name
+        }
+        selectCmd.tableNames.add(tokens.get(index));
+        index++;
 
         // Parse conditions (if present)
         if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("WHERE")) {
@@ -197,20 +206,28 @@ public class CommandParser extends DBServer {
             StringBuilder conditionBuilder = new StringBuilder();
             while (index < tokens.size()) {
                 String token = tokens.get(index);
+                if (token.endsWith(";")) {
+                    token = token.replace(";", ""); // Remove trailing semicolon
+                }
                 if (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR")) {
-                    selectCmd.setCondition(conditionBuilder.toString().trim());
-                    selectCmd.setCondition(token); // Logical operator
-                    conditionBuilder = new StringBuilder();
+                    if (conditionBuilder.length() > 0) {
+                        selectCmd.setCondition(conditionBuilder.toString().trim());
+                        conditionBuilder = new StringBuilder();
+                    }
+                    selectCmd.setCondition(token); // Add logical operator
                 } else {
                     conditionBuilder.append(token).append(" ");
                 }
                 index++;
             }
+            // Add the last condition (if any)
             if (conditionBuilder.length() > 0) {
                 selectCmd.setCondition(conditionBuilder.toString().trim());
             }
         }
+
         return selectCmd;
+
     }
 
 
