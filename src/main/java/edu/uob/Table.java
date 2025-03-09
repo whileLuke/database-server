@@ -91,7 +91,7 @@ public class Table implements Serializable {
 
         // Iterate over all rows and apply the conditions
         for (List<String> row : rows) {
-            if (isRowMatchConditions(row, conditions)) {
+            if (isRowMatchConditions(row, conditions, columns)) {
                 selectedRows.add(row); // Add matching rows to the selectedRows list
             }
         }
@@ -120,20 +120,23 @@ public class Table implements Serializable {
 
     public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) throws Exception {
         List<List<String>> filteredRows = new ArrayList<>();
-        List<Integer> columnIndexes = getColumnIndexes(selectedColumns); // Get indexes of the selected columns
-
         for (List<String> row : rows) {
-            if (isRowMatchConditions(row, conditions)) {
-                // Add only the values in the requested columns
-                filteredRows.add(
-                        columnIndexes.stream()
-                                .map(row::get)
-                                .collect(Collectors.toList())
-                );
+            if (isRowMatchConditions(row, conditions, columns)) {  // Pass the 'columns' list as the third argument
+                filteredRows.add(getSelectedColumns(row, selectedColumns));
             }
         }
         return filteredRows;
     }
+
+    private List<String> getSelectedColumns(List<String> row, List<String> selectedColumns) {
+        List<Integer> selectedIndexes = getColumnIndexes(selectedColumns);
+        List<String> selectedRow = new ArrayList<>();
+        for (int index : selectedIndexes) {
+            selectedRow.add(row.get(index));
+        }
+        return selectedRow;
+    }
+
 
    /* private List<Integer> getColumnIndexes(List<String> selectedColumns) {
         List<Integer> indexes = new ArrayList<>();
@@ -192,7 +195,7 @@ public class Table implements Serializable {
         result.append(String.join(" | ", selectedColumns)).append("\n");
 
         for (List<String> row : rows) {
-            if (isRowMatchConditions(row, conditions)) {
+            if (isRowMatchConditions(row, conditions, columns)) {
                 List<String> selectedRowValues = columnIndexes.stream()
                         .map(row::get)
                         .collect(Collectors.toList());
@@ -216,48 +219,83 @@ public class Table implements Serializable {
         return columnIndexes;
     }
 
-    private boolean isRowMatchConditions(List<String> row, List<String> conditions) throws Exception {
-        boolean result = evaluateCondition(row, conditions.get(0)); // First condition
-        for (int i = 1; i < conditions.size(); i += 2) {
-            String logicalOperator = conditions.get(i); // AND / OR
-            boolean nextConditionResult = evaluateCondition(row, conditions.get(i + 1));
-            if (logicalOperator.equalsIgnoreCase("AND")) {
-                result = result && nextConditionResult;
-            } else if (logicalOperator.equalsIgnoreCase("OR")) {
-                result = result || nextConditionResult;
-            } else {
-                throw new Exception("[ERROR] Invalid logical operator: " + logicalOperator);
+    private boolean isRowMatchConditions(List<String> row, List<String> conditions, List<String> columns) throws Exception {
+        for (String condition : conditions) {
+            String[] parts = splitCondition(condition);
+            if (parts == null || parts.length != 3) {
+                throw new Exception("Invalid condition format: " + condition);
+            }
+
+            String columnName = parts[0].trim();
+            String operator = parts[1].trim();
+            String value = parts[2].trim();
+
+            // Get the column index for the column being checked
+            int columnIndex = columns.indexOf(columnName);
+            if (columnIndex == -1) {
+                throw new Exception("Column not found: " + columnName);
+            }
+
+            // Get the value of the row at the column index
+            String rowValue = row.get(columnIndex);
+
+            // Check if the row satisfies the condition
+            if (!evaluateCondition(rowValue, value, operator)) {
+                return false; // If any condition fails, the row does not match
             }
         }
-        return result;
+        return true; // All conditions matched
     }
 
-    private boolean evaluateCondition(List<String> row, String condition) {
-        // Parse condition (e.g., "columnName = value")
-        String[] conditionParts = condition.split("\\s+");
-        if (conditionParts.length != 3) return false;
-        String columnName = conditionParts[0];
-        String operator = conditionParts[1];
-        String value = conditionParts[2];
+    private String[] splitCondition(String condition) {
+        // Define a list of valid operators, ordered by length to handle multi-character operators first
+        String[] operators = {"==", "!=", ">=", "<=", ">", "<", "LIKE"};
 
-        int columnIndex = columns.indexOf(columnName);
-        if (columnIndex == -1) return false; // Column doesn't exist
-        String cellValue = row.get(columnIndex);
+        // Check each operator to see if it exists in the condition string
+        for (String operator : operators) {
+            int index = condition.indexOf(operator);
+            if (index != -1) {
+                // Split the condition into column, operator, and value
+                String column = condition.substring(0, index).trim();
+                String value = condition.substring(index + operator.length()).trim();
+                return new String[]{column, operator, value};
+            }
+        }
 
-        // Evaluate based on operator
-        return switch (operator) {
-            case "=" -> cellValue.equals(value);
-            case "!=" -> !cellValue.equals(value);
-            case ">" -> Double.parseDouble(cellValue) > Double.parseDouble(value);
-            case ">=" -> Double.parseDouble(cellValue) >= Double.parseDouble(value);
-            case "<" -> Double.parseDouble(cellValue) < Double.parseDouble(value);
-            case "<=" -> Double.parseDouble(cellValue) <= Double.parseDouble(value);
-            case "LIKE" -> cellValue.contains(value);
-            default -> false; // Invalid operator
-        };
+        // If no operator is found, return null
+        return null;
     }
 
-        public boolean updateRows(List<String> columnNamesToUpdate, List<String> newValues) {
+    private boolean evaluateCondition(String rowValue, String conditionValue, String operator) {
+        // Remove surrounding quotes from conditionValue if needed
+        if (conditionValue.startsWith("\"") || conditionValue.startsWith("'")) {
+            conditionValue = conditionValue.substring(1, conditionValue.length() - 1);
+        }
+
+        // Perform the comparison based on the operator
+        switch (operator) {
+            case "==":
+                return rowValue.equals(conditionValue);
+            case "!=":
+                return !rowValue.equals(conditionValue);
+            case ">":
+                return Double.parseDouble(rowValue) > Double.parseDouble(conditionValue);
+            case "<":
+                return Double.parseDouble(rowValue) < Double.parseDouble(conditionValue);
+            case ">=":
+                return Double.parseDouble(rowValue) >= Double.parseDouble(conditionValue);
+            case "<=":
+                return Double.parseDouble(rowValue) <= Double.parseDouble(conditionValue);
+            case "LIKE":
+                return rowValue.contains(conditionValue); // Simple "contains" logic for LIKE
+            default:
+                return false;
+        }
+    }
+
+
+
+    public boolean updateRows(List<String> columnNamesToUpdate, List<String> newValues) {
         if (columnNamesToUpdate.size() != newValues.size()) {
             return false;
         }

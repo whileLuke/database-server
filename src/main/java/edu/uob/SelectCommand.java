@@ -54,31 +54,56 @@ public class SelectCommand extends DBCommand {
 
     private boolean isValidCondition(List<String> conditions, List<String> columns) {
         for (String condition : conditions) {
-            // Example condition: columnName == "value"
-            String comparatorRegex = "==|!=|>|<|>=|<=|LIKE";
-            String regex = "^([a-zA-Z0-9_]+)\\s*(" + comparatorRegex + ")\\s*(\".*\"|'.*'|\\d+(\\.\\d+)?|TRUE|FALSE|NULL)$";
-            if (!condition.matches(regex)) {
-                return false; // Invalid format
+            String[] parts = splitCondition(condition); // Split condition manually
+            if (parts == null || parts.length != 3) {
+                return false; // Condition doesn't follow the format "column operator value"
             }
-
-            // Split the condition (e.g., name == "anna")
-            String[] parts = condition.split("\\s*(==|!=|>|<|>=|<=|LIKE)\\s*");
-            if (parts.length != 2) return false;
 
             String columnName = parts[0].trim();
+            String operator = parts[1].trim();
+            String value = parts[2].trim();
+
+            // Check if the column exists in the table
             if (!columns.contains(columnName)) {
-                return false; // Column in condition does not exist
+                return false;
             }
 
-            String value = parts[1].trim();
+            // Check for valid operator
+            if (!isValidOperator(operator)) {
+                return false;
+            }
+
+            // Check if the value is properly quoted or is a valid literal
             if (!isProperlyQuoted(value) && !isLiteralValue(value)) {
-                return false; // Value must be quoted or valid literal
+                return false;
             }
         }
         return true;
     }
 
+    private boolean isValidOperator(String operator) {
+        return operator.equals("==") || operator.equals("!=") || operator.equals(">") ||
+                operator.equals(">=") || operator.equals("<") || operator.equals("<=") ||
+                operator.equals("LIKE");
+    }
+
+    private String[] splitCondition(String condition) {
+        String[] operators = {"==", "!=", ">=", "<=", ">", "<", "LIKE"};
+
+        for (String operator : operators) {
+            int index = condition.indexOf(operator);
+            if (index != -1) {
+                String column = condition.substring(0, index);
+                String value = condition.substring(index + operator.length());
+                return new String[]{column, operator, value};
+            }
+        }
+        return null; // No valid operator found
+    }
+
+
     private boolean isProperlyQuoted(String value) {
+        // Check for single or double quotes
         return (value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"));
     }
 
