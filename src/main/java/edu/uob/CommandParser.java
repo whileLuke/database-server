@@ -133,6 +133,7 @@ public class CommandParser extends DBServer {
     private DBCommand alterTable() {
         if (tokens.size() < 6) return null;
         if (!tokens.get(tokens.size() - 1).equals(";")) return null;
+        if(tokens.contains("(") || tokens.contains(")") || tokens.contains(",")) return null;
         DBCommand d = new AlterCommand();
         d.tableNames.add(tokens.get(2));
         String operation = tokens.get(3).toUpperCase();

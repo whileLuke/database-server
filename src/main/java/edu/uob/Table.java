@@ -80,30 +80,69 @@ public class Table implements Serializable {
     }
 
     public String selectAllColumns(List<String> conditions) throws Exception {
+        // Handle null or empty conditions
+        if (conditions == null || conditions.isEmpty()) {
+            // If no conditions are provided, return all rows
+            return formatRows(columns, rows);
+        }
+
+        // Create a list to store the rows that match the conditions
         List<List<String>> selectedRows = new ArrayList<>();
 
+        // Iterate over all rows and apply the conditions
         for (List<String> row : rows) {
             if (isRowMatchConditions(row, conditions)) {
-                selectedRows.add(row);
+                selectedRows.add(row); // Add matching rows to the selectedRows list
             }
         }
 
-        return formatRows(columns, selectedRows);
+        // If no rows match, return only the header row (column names)
+        if (selectedRows.isEmpty()) {
+            return String.join("\t", columns) + "\n";
+        }
 
-        //
-//
-//
-//        StringBuilder result = new StringBuilder();
-//        result.append(String.join(" | ", columns)).append("\n");
-//
-//        for (List<String> row : rows) {
-//            if (isRowMatchConditions(row, conditions)) {
-//                result.append(String.join(" | ", row)).append("\n");
-//            }
-//        }
-//
-//        return result.toString();
+        // Format and return the selected rows along with column names
+        return formatRows(columns, selectedRows);
     }
+
+
+    public List<List<String>> selectRowsWithoutConditions(List<String> selectedColumns) {
+        List<List<String>> result = new ArrayList<>();
+        List<Integer> columnIndexes = getColumnIndexes(selectedColumns); // Get indexes of the selected columns
+
+        for (List<String> row : rows) {
+            // Add only the values in the requested columns
+            result.add(columnIndexes.stream().map(row::get).collect(Collectors.toList()));
+        }
+
+        return result;
+    }
+
+    public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) throws Exception {
+        List<List<String>> filteredRows = new ArrayList<>();
+        List<Integer> columnIndexes = getColumnIndexes(selectedColumns); // Get indexes of the selected columns
+
+        for (List<String> row : rows) {
+            if (isRowMatchConditions(row, conditions)) {
+                // Add only the values in the requested columns
+                filteredRows.add(
+                        columnIndexes.stream()
+                                .map(row::get)
+                                .collect(Collectors.toList())
+                );
+            }
+        }
+        return filteredRows;
+    }
+
+   /* private List<Integer> getColumnIndexes(List<String> selectedColumns) {
+        List<Integer> indexes = new ArrayList<>();
+        for (String column : selectedColumns) {
+            indexes.add(columns.indexOf(column));
+        }
+        return indexes;
+    } */
+
 
     private String formatRows(List<String> columns, List<List<String>> selectedRows) {
         StringBuilder result = new StringBuilder();
@@ -160,8 +199,7 @@ public class Table implements Serializable {
                 result.append(String.join(" | ", selectedRowValues)).append("\n");
             }
         }
-
-        return result.toString();
+        return "[OK] " + result;
     }
 
     private List<Integer> getColumnIndexes(List<String> columnNames) {
@@ -214,6 +252,7 @@ public class Table implements Serializable {
             case ">=" -> Double.parseDouble(cellValue) >= Double.parseDouble(value);
             case "<" -> Double.parseDouble(cellValue) < Double.parseDouble(value);
             case "<=" -> Double.parseDouble(cellValue) <= Double.parseDouble(value);
+            case "LIKE" -> cellValue.contains(value);
             default -> false; // Invalid operator
         };
     }

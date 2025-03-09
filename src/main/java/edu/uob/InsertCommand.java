@@ -3,7 +3,7 @@ package edu.uob;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-
+//INSERT no longer works on a restart. can only insert into a recently created table.
 //ONLY I8SSUE IS BC LOADTABLES IS UNCOMMENTED I CAN PROB INSERT INTO ANY TABLE EVEN FROM DIFF DBS
 public class InsertCommand extends DBCommand {
     @Override
@@ -38,7 +38,7 @@ public class InsertCommand extends DBCommand {
             return "[OK] 1 row inserted into '" + tableName + "'.";
         } else {
             return "[ERROR] Failed to insert into '" + tableName + "'. Column count mismatch: expected " +
-                    table.getColumns().size() + " columns, got " + rowValues.size() + " values.";
+                    (table.getColumns().size() - 1) + " columns, got " + (rowValues.size() - 1) + " values.";
         }
     }
 
