@@ -6,7 +6,7 @@ import java.util.List;
 public class SelectCommand extends DBCommand {
     private List<String> conditions = new ArrayList<>();
 
-    public void setCondition(String condition) { this.conditions.add(condition); }
+    public void setConditions(List<String> conditions) { this.conditions = conditions; }
 
     @Override
     public String query(DBServer server) throws Exception {
@@ -30,10 +30,11 @@ public class SelectCommand extends DBCommand {
             }
         }
 
-        // Validate the WHERE conditions if provided
-        if (!conditions.isEmpty() && !isValidCondition(conditions, table.getColumns())) {
+        // Validate the WHERE conditions if
+        //MAY HAVE TO REINTEGRATE THIS
+        /*if (!conditions.isEmpty() && !isValidCondition(conditions, table.getColumns())) {
             return "[ERROR] Invalid or missing condition in WHERE clause.";
-        }
+        }*/
 
         // Perform the selection
         List<List<String>> filteredRows;

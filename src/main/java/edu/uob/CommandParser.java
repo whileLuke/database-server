@@ -1,254 +1,239 @@
 package edu.uob;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class CommandParser extends DBServer {
     List<String> tokens = new ArrayList<>();
     public String parseCommand(List<String> tokensList) throws Exception {
-        System.out.println("Test 1");
         tokens = tokensList;
-        System.out.println(tokens);
         if (tokens.isEmpty()) return "[ERROR] No command entered.";
         if (tokens.size() == 1) return "[ERROR] Command is not long enough.";
-        DBCommand d = null;
-        switch (tokens.get(0).toUpperCase()) {
-            case "USE":
-                System.out.println("Test 1 bil");
-                d = use();
-                break;
-            case "CREATE":
-                System.out.println("Test 2 bil");
-                if(Objects.equals(tokens.get(1).toLowerCase(), "table")) d = createTable();
-                else if(Objects.equals(tokens.get(1).toLowerCase(), "database")) d = createDatabase();
-                break;
-            case "DROP":
-                if (Objects.equals(tokens.get(1).toLowerCase(), "table")) d = dropTable();
-                else if (Objects.equals(tokens.get(1).toLowerCase(), "database")) d = dropDatabase();
-                break;
-            case "ALTER":
-                d = alterTable();
-                break;
-            case "INSERT":
-                d = insert();
-                break;
-            case "SELECT":
-                d = select();
-                break;
-            case "UPDATE":
-                d = update();
-                break;
-            default:
-              return "[ERROR] Invalid command type: " + tokens.get(0) + ".";
+        DBCommand cmd = null;
+        String firstToken = tokens.get(0).toUpperCase();
+        switch (firstToken) {
+            case "USE": cmd = parseUse(); break;
+            case "CREATE": cmd = parseCreate(); break;
+            case "DROP": cmd = parseDrop(); break;
+            case "ALTER": cmd = parseAlter(); break;
+            case "INSERT": cmd = parseInsert(); break;
+            case "SELECT": cmd = parseSelect(); break;
+            case "UPDATE": cmd = parseUpdate(); break;
+            case "JOIN": cmd = parseJoin(); break;
+            case "DELETE": cmd = parseDelete(); break;
+            default: return error("Invalid command type: " + firstToken);
         }
-        if(d == null){
-            return "[ERROR] " + tokens.get(0).toUpperCase() + " command formatted incorrectly.";
-        }
-        return d.query(this);
-        //DBCommand.parse(tokens.get(0));
+        if(cmd == null) return error(firstToken + " command formatted incorrectly.");
+        return cmd.query(this);
     }
 
-    private DBCommand use() {
-        if(tokens.size() != 3) return null;
-        if(!tokens.get(2).equals(";")) return null;
-        if(tokens.get(1).equals("*")) return null;
-        //Maybe add a chek that its an instance of string
-        DBCommand d = new UseCommand();
-        d.DBName = tokens.get(1);
-        return d;
+    private String error(String message) { return "[ERROR] " + message; }
+
+    private boolean endsWithSemicolon() { return tokens.get(tokens.size() - 1).equals(";"); }
+
+    private boolean isAsterisk(String name) { return Objects.equals(name, "*"); }
+
+    private DBCommand parseUse() {
+        if (tokens.size() == 3 && endsWithSemicolon() && !isAsterisk(tokens.get(1))) {
+            UseCommand useCmd = new UseCommand();
+            useCmd.DBName = tokens.get(1);
+            return useCmd;
+        } else return null;
     }
 
-    private DBCommand createTable() {
-        //is createtablecommand getting called too soon?
-        System.out.println("Test 3 TABLE");
-        if(tokens.size() < 4) return null;
-        if (!Objects.equals(tokens.get(tokens.size() - 1), ";")) return null;
-        DBCommand d = new CreateTableCommand();
-        d.tableNames.add(tokens.get(2));
-        //Make sure it's not a star.
-        System.out.println("Test 5 TABLE");
-        if(tokens.size() > 4) {
-            System.out.println("Test 7 TABLE");
-            if(!tokens.get(3).equals("(")) return null;
-            System.out.println("Test 9 TABLE");
-            for(int i = 4; i < tokens.size(); i += 2) {
-                System.out.println("Test 11 TABLE");
-                String column = tokens.get(i);
-                if (Objects.equals(column, "*")) return null;
-                System.out.println("Test 13 TABLE");
-                String punctuation = tokens.get(i + 1);
-                d.columnNames.add(column);
-                if(!punctuation.equals(",") && !punctuation.equals(")")) return null;
-                System.out.println("Test 15 TABLE");
-                if (punctuation.equals(")")) {
-                    System.out.println("tablenames = " + d.tableNames + ", columns = " + d.columnNames);
-                    tables.put(d.tableNames.get(0), new Table(d.columnNames)); //remember to include id
-                    System.out.println("TABLES IS EQUAL TO" + tables);
-                    System.out.println("tablenames = " + d.tableNames + ", columns = " + d.columnNames);
-                    return d;
-                    //if (i == tokens.size() - 2) return d; // we've reached the end of attributes
-                    //else return null;
-                }
-                System.out.println("Test 17 TABLE");
-                if(i + 2 >= tokens.size()) return null;
-            }
-        }
-        System.out.println("OTHGER tablenames = " + d.tableNames + ", columns = " + d.columnNames);
-        tables.put(d.tableNames.get(0), new Table(d.columnNames));
-        System.out.println("OTHER TABLES IS EQUAL TO" + tables);
-        System.out.println("OTHGER tablenames = " + d.tableNames + ", columns = " + d.columnNames);
-        return d;
-    }
-
-    private DBCommand createDatabase() {
-        if(tokens.size() != 4) return null;
-        if (!tokens.get(3).equals(";")) return null;
-        if(tokens.get(2).equals("*")) return null;
-        DBCommand d = new CreateDatabaseCommand();
-        d.DBName = tokens.get(2);
-        return d;
-    }
-
-    private DBCommand dropTable() {
-        if (tokens.size() != 4) return null;
-        if (!tokens.get(3).equals(";")) return null;
-
-        DBCommand d = new DropCommand();
-        d.tableNames.add(tokens.get(2));
-        return d;
-    }
-
-    private DBCommand dropDatabase() {
-        if (tokens.size() != 4) return null;
-        if (!tokens.get(3).equals(";")) return null;
-
-        DBCommand d = new DropCommand();
-        d.DBName = tokens.get(2);
-        return d;
-    }
-
-    private DBCommand alterTable() {
-        if (tokens.size() < 6) return null;
-        if (!tokens.get(tokens.size() - 1).equals(";")) return null;
-        if(tokens.contains("(") || tokens.contains(")") || tokens.contains(",")) return null;
-        DBCommand d = new AlterCommand();
-        d.tableNames.add(tokens.get(2));
-        String operation = tokens.get(3).toUpperCase();
-        if (Objects.equals(operation, "ADD")) {
-            d.commandType = "ADD";
-            d.columnNames.add(tokens.get(4));
-        } else if (Objects.equals(operation, "DROP")) {
-            d.commandType = "DROP";
-            d.columnNames.add(tokens.get(4));
-        } else {
-            return null;
-        }
-        return d;
-    }
-
-    private DBCommand insert() {
-        if (tokens.size() < 5) return null;
-        //Check for the correct brackets, comas, semicolon.
-        //Can check for semicolon at start
-        if(!tokens.get(tokens.size() - 1).equals(";")) return null;
-        DBCommand d = new InsertCommand();
-        d.tableNames.add(tokens.get(2));
-        if (!tokens.get(3).equalsIgnoreCase("values")) return null;
-
-        for (int i = 4; i < tokens.size(); i++) {
-            String token = tokens.get(i).replace(",", "").replace("(", "").replace(")", "").trim();
-            if (token.equals(";")) break;
-            if (!token.isEmpty()) d.values.add(token);
-        }
-        return d;
-    }
-
-    private DBCommand select() {
-        SelectCommand selectCmd = new SelectCommand();
-        // Assume tokens are already prepared
-        if (tokens == null || tokens.isEmpty() || !tokens.get(0).equalsIgnoreCase("SELECT")) {
-            // Return null or throw an exception for invalid command
-            return null;
-        }
-        int index = 1;
-        // Parse columns
-        if (tokens.get(index).equals("*")) {
-            selectCmd.columnNames.add("*");
-            index++; // Move past "*"
-        } else {
-            // Parse column list
-            while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("FROM")) {
-                selectCmd.columnNames.add(tokens.get(index));
-                index++;
-                if (index < tokens.size() && tokens.get(index).equals(",")) {
-                    index++; // Skip commas
-                }
-            }
-        }
-
-        if (index >= tokens.size() || !tokens.get(index).equalsIgnoreCase("FROM")) {
-            return null; // Missing "FROM" keyword
-        }
-
-        index++; // Move past "FROM"
-        if (index >= tokens.size()) {
-            return null; // Missing table name
-        }
-        selectCmd.tableNames.add(tokens.get(index));
-        index++;
-
-        // Parse conditions (if present)
-        if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("WHERE")) {
-            index++; // Move past "WHERE"
-            StringBuilder conditionBuilder = new StringBuilder();
-            while (index < tokens.size()) {
-                String token = tokens.get(index);
-                if (token.endsWith(";")) {
-                    token = token.replace(";", ""); // Remove trailing semicolon
-                }
-                if (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR")) {
-                    if (conditionBuilder.length() > 0) {
-                        selectCmd.setCondition(conditionBuilder.toString().trim());
-                        conditionBuilder = new StringBuilder();
-                    }
-                    selectCmd.setCondition(token); // Add logical operator
-                } else {
-                    conditionBuilder.append(token).append(" ");
-                }
-                index++;
-            }
-            // Add the last condition (if any)
-            if (conditionBuilder.length() > 0) {
-                selectCmd.setCondition(conditionBuilder.toString().trim());
-            }
-        }
-
-        return selectCmd;
-
-    }
-
-
-    private Object parseCondition() {
+    private DBCommand parseCreate() {
+        if (tokens.size() < 4) return null;
+        String createType = tokens.get(1).toLowerCase();
+        if (createType.equals("database")) return createDatabase();
+        if (createType.equals("table")) return createTable();
         return null;
     }
 
-    private DBCommand update() {
-        if (tokens.size() < 7) return null;
-        DBCommand d = new UpdateCommand();
-        d.tableNames.add(tokens.get(1));
-        if (!tokens.get(2).equals("SET")) return null;
-        for (int i = 3; i < tokens.size(); i += 4) {
-            if (!tokens.get(i + 1).equals("=")) return null;
-            d.columnNames.add(tokens.get(i)); // Column name
-            d.values.add(tokens.get(i + 2).replace("'", "")); // Column value
-            if (tokens.get(i + 3).equals(";")) break;
+    private DBCommand createTable() {
+        if (!endsWithSemicolon() || tokens.size() < 4) return null;
+        CreateTableCommand cmd = new CreateTableCommand();
+        cmd.tableNames.add(tokens.get(2));
+
+        int start = tokens.indexOf("(");
+        int end = tokens.lastIndexOf(")");
+        if (start < 0 || end < 0 || end <= start) return null;
+
+        List<String> columns = tokens.subList(start + 1, end);
+        for (int i = 0; i < columns.size(); i += 2) {
+            String column = columns.get(i);
+            if (isAsterisk(column)) return null;
+            cmd.columnNames.add(column);
+            if (i + 1 < columns.size() && !columns.get(i + 1).equals(",") && !columns.get(i + 1).equals(")")) return null;
         }
-        return d;
+
+        tables.put(cmd.tableNames.get(0), new Table(cmd.columnNames));
+        return cmd;
     }
 
+    private DBCommand createDatabase() {
+        if (tokens.size() == 4 && endsWithSemicolon() && !isAsterisk(tokens.get(2))) {
+            CreateDatabaseCommand cmd = new CreateDatabaseCommand();
+            cmd.DBName = tokens.get(2);
+            return cmd;
+        } else return null;
+    }
+
+    private DBCommand parseDrop() {
+        if (tokens.size() != 4 || !endsWithSemicolon()) return null;
+        DropCommand cmd = new DropCommand();
+        if (tokens.get(1).equalsIgnoreCase("database")) cmd.DBName = tokens.get(2);
+        else if (tokens.get(1).equalsIgnoreCase("table")) cmd.tableNames.add(tokens.get(2));
+        else return null;
+        return cmd;
+    }
+
+    private DBCommand parseAlter() {
+        if (tokens.size() < 6 || !endsWithSemicolon()) return null;
+        String operation = tokens.get(3).toUpperCase();
+        if (!(operation.equals("ADD") || operation.equals("DROP"))) return null;
+
+        AlterCommand cmd = new AlterCommand();
+        cmd.tableNames.add(tokens.get(2));
+        cmd.commandType = operation;
+        cmd.columnNames.add(tokens.get(4));
+        return cmd;
+    }
+
+    private DBCommand parseInsert() {
+        if (tokens.size() < 5 || !endsWithSemicolon() || !tokens.get(3).equalsIgnoreCase("values")) return null;
+
+        InsertCommand cmd = new InsertCommand();
+        cmd.tableNames.add(tokens.get(2));
+
+        for (int i = 4; i < tokens.size() - 1; i++) { // -1 to skip final semicolon
+            String token = tokens.get(i).replaceAll("[(),]", "").trim();
+            if (!token.isEmpty()) cmd.values.add(token);
+        }
+        return cmd;
+    }
+
+    private DBCommand parseSelect() {
+        if (tokens.size() < 4 || !endsWithSemicolon()) return null;
+
+        SelectCommand cmd = new SelectCommand();
+        int index = 1;
+        while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("FROM")) {
+            cmd.columnNames.add(tokens.get(index++));
+            if (index < tokens.size() && tokens.get(index).equals(",")) index++;
+        }
+        if (index >= tokens.size()) return null;
+        cmd.tableNames.add(tokens.get(++index));
+
+        parseOptionalCondition(cmd, index + 1);
+        return cmd;
+    }
+
+    private void parseOptionalCondition(DBCommand cmd, int startId) {
+        if (startId < tokens.size() && tokens.get(startId).equalsIgnoreCase("WHERE")) {
+            List<String> conditions = new ArrayList<>();
+            StringBuilder condition = new StringBuilder();
+            for (int i = startId + 1; i < tokens.size(); i++) {
+                String token = tokens.get(i).replace(";", "");
+                if (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR")) {
+                    if (!condition.isEmpty()) {
+                        conditions.add(condition.toString().trim());
+                        condition.setLength(0); // Clear for the next condition
+                    }
+                }
+                condition.append(token).append(" ");
+            }
+            if (!condition.isEmpty()) {
+                conditions.add(condition.toString().trim()); // Add the last condition
+            }
+            if (cmd instanceof SelectCommand) {
+                ((SelectCommand) cmd).setConditions(conditions);
+            } else if (cmd instanceof DeleteCommand) {
+                ((DeleteCommand) cmd).setConditions(conditions);
+            } else if (cmd instanceof UpdateCommand) {
+                ((UpdateCommand) cmd).setConditions(conditions);
+            }
+        }
+    }
+
+    private DBCommand parseUpdate() {
+        if (tokens.size() < 7 || !tokens.get(2).equalsIgnoreCase("SET")) return null;
+
+        UpdateCommand cmd = new UpdateCommand();
+        cmd.tableNames.add(tokens.get(1));
+
+        int i = 3;
+        while (i < tokens.size() && !tokens.get(i).equalsIgnoreCase("WHERE")) {
+            cmd.columnNames.add(tokens.get(i));
+            if (!tokens.get(++i).equals("=")) return null;
+            cmd.values.add(tokens.get(++i).replace("'", ""));
+            if (tokens.get(++i).equals(",")) i++;
+        }
+
+        parseOptionalCondition(cmd, i);
+        return cmd;
+    }
+
+
+    private DBCommand parseJoin() {
+        if (tokens.size() != 8) return null;
+
+        JoinCommand cmd = new JoinCommand();
+        if (!tokens.get(2).equalsIgnoreCase("AND") || !tokens.get(4).equalsIgnoreCase("ON") || !tokens.get(6).equalsIgnoreCase("AND"))
+            return null;
+
+        cmd.tableNames.add(tokens.get(1));
+        cmd.tableNames.add(tokens.get(3));
+        cmd.columnNames.add(tokens.get(5));
+        cmd.columnNames.add(tokens.get(7).replace(";", ""));
+        return cmd;
+    }
+
+    private DBCommand parseDelete() {
+        if (tokens.size() < 5 || !tokens.get(1).equalsIgnoreCase("FROM")) return null;
+        DeleteCommand cmd = new DeleteCommand();
+        cmd.tableNames.add(tokens.get(2));
+        parseOptionalCondition(cmd, 3);
+        return cmd;
+    }
+
+    private boolean checkForSemicolon() {
+        return tokens.get(tokens.size() - 1).equals(";");
+    }
+
+    private boolean expectedToken(int index, String expected) {
+        return tokens.get(index).equalsIgnoreCase(expected);
+    }
+
+    private List<String> parseList(int startIndex, List<String> stopWords) {
+        List<String> list = new ArrayList<>();
+        for (int i = startIndex; i < tokens.size(); i++) {
+            String token = tokens.get(i).replace(",", "");
+            if (stopWords.contains(token.toUpperCase()) || token.equals(";")) break;
+            list.add(token);
+        }
+        return list;
+    }
+
+    private String parseCondition(int startIndex) {
+        StringBuilder condition = new StringBuilder();
+        for (int i = startIndex; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            if (token.equals(";")) break;
+            condition.append(token).append(" ");
+        }
+        return condition.toString().trim();
+    }
+
+    private String parseTableName(int index) {
+        String name = tokens.get(index);
+        return name.equals("*") ? null : name;
+    }
+
+    private String parseColumnName(int index) {
+        String name = tokens.get(index);
+        return name.equals("*") ? null : name;
+    }
 }
 
 
