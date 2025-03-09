@@ -48,6 +48,24 @@ public class DBServer {
     */
     public String handleCommand(String command) throws IOException, Exception {
         // TODO implement your server logic here
+        if (command == null || command.isEmpty()) {
+            return "[ERROR] Empty command.";
+        }
+
+        if (!command.endsWith(";")) {
+            return "[ERROR] Command must end with a semicolon (';').";
+        }
+        /*command = command.trim().substring(0, command.length() - 1); // Remove trailing semicolon
+    tokens = new ArrayList<>(List.of(tokenise(command)));       // Tokenize the input command
+
+    // Parse command and execute
+    DBCommand parsedCommand = new CommandParser().parseCommand(tokens); // Parse the tokens
+    if (parsedCommand == null) {
+        return "[ERROR] Failed to parse command.";
+    }
+
+    return parsedCommand.query(this);
+*/
         tokens.clear();
         query = command;
         setupQuery();
