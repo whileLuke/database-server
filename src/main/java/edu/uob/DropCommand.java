@@ -21,7 +21,7 @@ public class DropCommand extends DBCommand {
                 return "[ERROR] Table '" + tableName + "' does not exist in the current database.";
             }
             if (tableFile.delete()) {
-                server.tables.remove(tableName); // Remove the table from in-memory representation
+                tables.remove(tableName); // Remove the table from in-memory representation
                 server.saveCurrentDB(); // Save database state to persist changes
                 return "[OK] Dropped table '" + tableName + "'.";
             } else {
@@ -38,56 +38,3 @@ public class DropCommand extends DBCommand {
         else return "[ERROR] No table or database specified to drop.";
     }
 }
-
-
-
-
-
-            /*if (server.tables.containsKey(tableName)) {
-                System.out.println("Table " + tableName + " already exists");
-                server.tables.remove(tableName); // Remove from memory
-
-                // Remove table file from disk
-                File tableFile = new File(server.storageFolderPath + File.separator + server.currentDB, tableName + ".tab");
-                if (tableFile.exists()) {
-                    if (!tableFile.delete()) {
-                        return "[ERROR] Failed to delete table file for '" + tableName + "'.";
-                    }
-                }
-                server.saveCurrentDB(); // MAYBE or MAYBE not
-                return "[OK] Dropped table '" + tableName + "'.";
-            } else return "[ERROR] Table '" + tableName + "' does not exist.";
-        }
-            // Handle dropping a databaseif
-        else if (DBName != null) {
-            if (server.deleteDatabase(DBName)) {
-                return "[OK] Dropped database '" + DBName + "'.";
-            } else {
-                return "[ERROR] Database '" + DBName + "' does not exist.";
-            }
-        }
-        return "[ERROR] No table or database specified to drop.";
-    }*/
-
-
-
-
-
-    /*File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
-                if (tableFile.exists()) {
-                    tableFile.delete(); // Remove table file from disk
-                }
-                server.saveCurrentDB();
-                return "[OK] Dropped table '" + tableName + "'.";
-            } else {
-                return "[ERROR] Table '" + tableName + "' does not exist.";
-            }
-        } else if (DBName != null) {
-            if (server.deleteDatabase(DBName)) {
-                return "[OK] Dropped database '" + DBName + "'.";
-            } else {
-                return "[ERROR] Database '" + DBName + "' does not exist.";
-            }
-        }
-        return "[ERROR] No table or database specified to drop.";
-    }*/

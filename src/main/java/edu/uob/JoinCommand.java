@@ -48,7 +48,7 @@ public class JoinCommand extends DBCommand {
             }
         }
         //GET JOINRESULT WORKING. PUT THE VALUES THAT AREIN BOTH.
-        return "[OK]\n" + formatResult(combinedColumnNames, joinResult);
+        return formatResult(combinedColumnNames, joinResult);
     }
 
     private String formatResult(List<String> columnNames, List<List<String>> rows) {

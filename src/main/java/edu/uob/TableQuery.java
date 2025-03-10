@@ -1,9 +1,7 @@
 // TableQuery class for selection/filtering operations
 package edu.uob;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class TableQuery {
     private final Table table;
@@ -179,34 +177,31 @@ public class TableQuery {
             return new ArrayList<>();
         }
 
+        Map<String, List<String>> otherTableMap = new HashMap<>();
+        for (List<String> row : otherTable.getRows()) {
+            String key = row.get(otherColumnIndex).trim().toLowerCase();
+            otherTableMap.put(key, row);
+        }
         List<List<String>> result = new ArrayList<>();
-        System.out.println("[DEBUG] thisColumnIndex: " + thisColumnIndex + ", otherColumnIndex: " + otherColumnIndex);
 
-        List<String> newColumns = new ArrayList<>(table.getColumns());
+        /*List<String> newColumns = new ArrayList<>(table.getColumns());
         for (String col : otherTable.getColumns()) {
             if (!col.equals(otherColumn)) {  // Avoid adding duplicate join column
                 newColumns.add(otherTable.getName() + "." + col);  // Prefix to avoid conflict
             }
-        }
+        }*/
 
         for (List<String> row1 : table.getRows()) {
-            String value1 = row1.get(thisColumnIndex);
-            if (value1 != null) value1 = value1.trim().toLowerCase();
-
-            for (List<String> row2 : otherTable.getRows()) {
-                String value2 = row2.get(otherColumnIndex);
-                if (value2 != null) value2 = value2.trim().toLowerCase();
-                System.out.println("[DEBUG] Comparing: '" + value1 + "' with '" + value2 + "'");
-                if (value1 != null && value1.equals(value2)) {  // Ensure values match
-                    List<String> combinedRow = new ArrayList<>(row1);
-                    for (int i = 0; i < row2.size(); i++) {
-                        if (i != otherColumnIndex) {  // Skip duplicate join column
-                            combinedRow.add(row2.get(i));
-                        }
+            String key = row1.get(thisColumnIndex).trim().toLowerCase();
+            if (otherTableMap.containsKey(key)) {
+                List<String> row2 = otherTableMap.get(key);
+                List<String> combinedRow = new ArrayList<>(row1);
+                for (int i = 0; i < row2.size(); i++) {
+                    if (i != otherColumnIndex) {
+                        combinedRow.add(row2.get(i));
                     }
-                    result.add(combinedRow);
-                    System.out.println("[DEBUG] Match found! Added row: " + combinedRow);
                 }
+                result.add(combinedRow);
             }
         }
 
