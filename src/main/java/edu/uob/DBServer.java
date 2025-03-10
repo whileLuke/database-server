@@ -23,7 +23,7 @@ public class DBServer {
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
-        server.blockingListenOn(8889);
+        server.blockingListenOn(8887);
     }
 
     /**
@@ -96,16 +96,31 @@ public class DBServer {
     }
 
     public boolean saveCurrentDB() throws IOException {
-        if (currentDB == null) return false;
-        File DBDirectory = new File(storageFolderPath, currentDB);
-        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) return false;
-        for (Map.Entry<String, Table> entry : tables.entrySet()) {
-            entry.getValue().saveToFile(DBDirectory.getPath(), entry.getKey());
+        if (currentDB == null) {
+            System.out.println("[ERROR] No database selected!");
+            return false;
         }
+        File DBDirectory = new File(storageFolderPath, currentDB);
+        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) {
+            System.out.println("[ERROR] Could not create database directory!");
+            return false;
+        }
+        System.out.println("[DEBUG] Saving tables to disk...");
+        for (Map.Entry<String, Table> entry : tables.entrySet()) {
+            System.out.println("📂 [DEBUG] Saving table: " + entry.getKey());
+            boolean success = TableStorage.saveToFile(entry.getValue(), DBDirectory.getPath());
+            if (!success) {
+                System.out.println("[ERROR] Failed to save table: " + entry.getKey());
+                return false;
+            }
+            File tableFile = new File(DBDirectory, entry.getKey() + ".tab");
+            System.out.println("[DEBUG] Saved file contents: " + new String(Files.readAllBytes(tableFile.toPath())));
+        }
+        System.out.println("[SUCCESS] Database saved!");
         return true;
     }
 
-    public boolean loadTables(String DBName) {
+    public boolean loadTables(String DBName) throws IOException {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         tables.clear();
@@ -120,7 +135,7 @@ public class DBServer {
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
                 String tableName = tableFile.getName().replace(FILE_EXTENSION, "");
-                Table table = Table.loadFromFile(DBDirectory.getPath(), tableName);
+                Table table = TableStorage.loadFromFile(DBDirectory.getPath(), tableName);
                 if (table != null) {
                     tables.put(tableName.toLowerCase(), table);
                 }
@@ -131,7 +146,7 @@ public class DBServer {
     }
 
     //protected boool?
-    protected boolean useDatabase(String DBName) {
+    protected boolean useDatabase(String DBName) throws IOException {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         return loadTables(DBName.toLowerCase());

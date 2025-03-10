@@ -23,7 +23,7 @@ public class CreateTableCommand extends DBCommand {
         if (!columnNames.contains("id")) {
             columnNames.add(0, "id");
         }
-        Table newTable = new Table(new ArrayList<>(columnNames));
+        Table newTable = new Table(tableName, columnNames);
         tables.put(tableName, newTable);
         if (saveCurrentDB()) {
             return "[OK] Created table '" + tableName + "'.";

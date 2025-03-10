@@ -26,7 +26,8 @@ public class DeleteCommand extends DBCommand {
         // Delete rows matching the conditions
         try {
             // Table does the actual deletion
-            int rowsDeleted = table.deleteRowsWithConditions(conditions);
+            TableQuery tableQuery = new TableQuery(table);
+            int rowsDeleted = tableQuery.deleteRowsWithConditions(conditions);
             if (rowsDeleted > 0) {
                 if (server.saveCurrentDB()) {
                     return "[OK] " + rowsDeleted + " row(s) deleted.";
