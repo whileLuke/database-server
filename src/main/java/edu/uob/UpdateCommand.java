@@ -23,7 +23,8 @@ public class UpdateCommand extends DBCommand {
         if (columnNames.size() != values.size()) {
             return "[ERROR] The number of columns do not match the number of values.";
         }
-        int updatedRows = table.updateRowsWithConditions(columnNames, values, conditions);
+        TableQuery tableQuery = new TableQuery(table);
+        int updatedRows = tableQuery.updateRowsWithConditions(columnNames, values, conditions);
         if (updatedRows > 0) {
             if (saveCurrentDB()) {
                 return "[OK] " + updatedRows + " row(s) updated.";

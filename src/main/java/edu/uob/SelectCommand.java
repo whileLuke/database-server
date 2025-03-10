@@ -38,10 +38,28 @@ public class SelectCommand extends DBCommand {
 
         // Perform the selection
         List<List<String>> filteredRows;
-        if (conditions.isEmpty()) {
-            filteredRows = table.selectRowsWithoutConditions(selectedColumns); // No filtering if no conditions
-        } else {
-            filteredRows = table.selectRowsWithConditions(selectedColumns, conditions); // Apply filtering
+        TableQuery tableQuery = new TableQuery(table);
+        try {
+            if (conditions.isEmpty()) {
+                // For selection without conditions, we need to manually extract the data
+                List<Integer> columnIndexes = new ArrayList<>();
+                for (String col : selectedColumns) {
+                    columnIndexes.add(table.getColumnIndex(col));
+                }
+
+                // Extract the data for the selected columns from all rows
+                filteredRows = new ArrayList<>();
+                extractSelectedData(table, filteredRows, columnIndexes);
+            } else {
+                // For selection with conditions, use the query method
+                // Note: You'll need to adapt this part based on how you want to handle the return value
+                // since the original returns formatted strings but you need raw data
+                filteredRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
+            }
+        } catch (Exception e) {
+            // Handle exception
+            filteredRows = new ArrayList<>(); // Empty result on error
+            // You might want to log the error or handle it differently
         }
 
         // Format the result
@@ -51,6 +69,16 @@ public class SelectCommand extends DBCommand {
         return "[OK]\n" + formatRows(selectedColumns, filteredRows);
 
 
+    }
+
+    static void extractSelectedData(Table table, List<List<String>> filteredRows, List<Integer> columnIndexes) {
+        for (List<String> row : table.getRows()) {
+            List<String> filteredRow = new ArrayList<>();
+            for (int index : columnIndexes) {
+                filteredRow.add(row.get(index));
+            }
+            filteredRows.add(filteredRow);
+        }
     }
 
     private boolean isValidCondition(List<String> conditions, List<String> columns) {

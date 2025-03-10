@@ -52,9 +52,14 @@ public class CommandParser extends DBServer {
 
     private DBCommand createTable() {
         if (!endsWithSemicolon() || tokens.size() < 4) return null;
-        CreateTableCommand cmd = new CreateTableCommand();
-        cmd.tableNames.add(tokens.get(2));
 
+        String tableName = tokens.get(2);
+        CreateTableCommand cmd = new CreateTableCommand();
+        cmd.tableNames.add(tableName);
+        if(tokens.size() == 4) {
+            tables.put(tableName, new Table(tableName, null));
+            return cmd;
+        }
         int start = tokens.indexOf("(");
         int end = tokens.lastIndexOf(")");
         if (start < 0 || end < 0 || end <= start) return null;
@@ -67,7 +72,7 @@ public class CommandParser extends DBServer {
             if (i + 1 < columns.size() && !columns.get(i + 1).equals(",") && !columns.get(i + 1).equals(")")) return null;
         }
 
-        tables.put(cmd.tableNames.get(0), new Table(cmd.columnNames));
+        tables.put(tableName, new Table(tableName, cmd.columnNames));
         return cmd;
     }
 

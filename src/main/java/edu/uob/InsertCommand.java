@@ -36,7 +36,7 @@ public class InsertCommand extends DBCommand {
             rowValues.add(0, String.valueOf(id));
         }*/
         rowValues.add(0, String.valueOf (id));
-        if (table.insertRow(rowValues)) {
+        if (table.addRow(rowValues)) {
             saveCurrentDB();
             return "[OK] 1 row inserted into '" + tableName + "'.";
         } else {

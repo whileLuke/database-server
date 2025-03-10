@@ -31,8 +31,8 @@ public class JoinCommand extends DBCommand {
         if (!table1.getColumns().contains(column1) || !table2.getColumns().contains(column2)) {
             return "[ERROR] Specified columns for JOIN not found in tables.";
         }
-
-        List<List<String>> joinResult = table1.joinWith(table2, column1, column2);
+        TableQuery tableQuery = new TableQuery(table1);
+        List<List<String>> joinResult = tableQuery.joinWith(table2, column1, column2);
 
         // Format and return the result
         List<String> combinedColumnNames = new ArrayList<>(table1.getColumns());
