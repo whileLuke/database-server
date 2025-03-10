@@ -13,7 +13,7 @@ import java.util.*;
 public class DBServer {
 
     private static final char END_OF_TRANSMISSION = 4;
-    //private static final char END_OF_TRANSMISSION = 4;
+    public static final String FILE_EXTENSION = ".tab";
     public String storageFolderPath;
     private String query;
     public static String currentDB;
@@ -105,7 +105,7 @@ public class DBServer {
         return true;
     }
 
-    public boolean loadTables(String DBName) {
+    public boolean loadTables(String DBName) throws IOException {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         tables.clear();
@@ -119,8 +119,9 @@ public class DBServer {
         File[] tableFiles = new File(DBDirectory.getPath()).listFiles();
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
-                String tableName = tableFile.getName().replace(".tab", "");
-                Table table = Table.loadFromFile(DBDirectory.getPath(), tableName);
+                String tableName = tableFile.getName().replace(FILE_EXTENSION, "");
+                Table table = new Table(null);
+                table = table.loadFromFile(DBDirectory.getPath(), tableName);
                 if (table != null) {
                     tables.put(tableName.toLowerCase(), table);
                 }
@@ -131,7 +132,7 @@ public class DBServer {
     }
 
     //protected boool?
-    protected boolean useDatabase(String DBName) {
+    protected boolean useDatabase(String DBName) throws IOException {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         return loadTables(DBName.toLowerCase());

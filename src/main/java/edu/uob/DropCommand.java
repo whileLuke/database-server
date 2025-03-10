@@ -12,7 +12,7 @@ public class DropCommand extends DBCommand {
             System.out.println("Server.tables is" + tables);
             //check the current db for tables instead.
             //This is not working properly
-            File tableFile = new File(server.storageFolderPath + File.separator + currentDB,tableName + ".tab");
+            File tableFile = new File(server.storageFolderPath + File.separator + currentDB,tableName + FILE_EXTENSION);
             System.out.println("Attempting to delete table: " + tableName);
             System.out.println("Expected table file path: " + tableFile.getAbsolutePath());
             System.out.println("File exists: " + tableFile.exists());

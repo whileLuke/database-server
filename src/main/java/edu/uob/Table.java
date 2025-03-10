@@ -289,7 +289,8 @@ public class Table implements Serializable {
             case "<=":
                 return Double.parseDouble(rowValue) <= Double.parseDouble(conditionValue);
             case "LIKE":
-                return rowValue.contains(conditionValue); // Simple "contains" logic for LIKE
+                String regex = conditionValue.replace("%", ".*").replace("_", ".");
+                return rowValue.matches(regex); // Simple "contains" logic for LIKE
             default:
                 return false;
         }
@@ -476,3 +477,369 @@ public class Table implements Serializable {
 
     //}
 }
+
+
+
+
+
+
+//package edu.uob;
+//
+//import java.io.*;
+//import java.util.*;
+//
+//public class Table {
+//    private List<String> columns;
+//    private List<List<String>> rows;
+//
+//    public Table(List<String> columns) {
+//        if (columns == null) {
+//            this.columns = new ArrayList<>();
+//            if (!this.columns.contains("id")) {
+//                this.columns.add("id");
+//            }
+//        } else {
+//            this.columns = new ArrayList<>(columns);
+//            if (!this.columns.contains("id")) {
+//                this.columns.add(0, "id");
+//            }
+//        }
+//        this.rows = new ArrayList<>();
+//    }
+//
+//    public void addRow(List<String> values) {
+//        // Ensure row has the correct number of columns
+//        if (values.size() != columns.size()) {
+//            throw new IllegalArgumentException("Row size must match column size");
+//        }
+//        rows.add(new ArrayList<>(values));
+//    }
+//
+//    public List<String> getColumns() {
+//        return new ArrayList<>(columns);
+//    }
+//
+//    public boolean addColumn(String columnName) {
+//        if (columns.contains(columnName)) {
+//            return false;
+//        }
+//        columns.add(columnName);
+//        // Add empty values for this column in all existing rows
+//        for (List<String> row : rows) {
+//            row.add("NULL");
+//        }
+//        return true;
+//    }
+//
+//    public boolean dropColumn(String columnName) {
+//        int columnIndex = columns.indexOf(columnName);
+//        if (columnIndex == -1) {
+//            return false;
+//        }
+//        if (columnName.equalsIgnoreCase("id")) {
+//            return false;
+//        }
+//        columns.remove(columnIndex);
+//        // Remove this column from all rows
+//        for (List<String> row : rows) {
+//            row.remove(columnIndex);
+//        }
+//        return true;
+//    }
+//
+//    // Save table to a file
+//    public void saveToFile(String directoryPath, String tableName) throws IOException {
+//        File file = new File(directoryPath, tableName + DBServer.FILE_EXTENSION);
+//        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+//            // Write column headers
+//            writer.write(String.join("\t", columns));
+//            writer.newLine();
+//
+//            // Write data rows
+//            for (List<String> row : rows) {
+//                writer.write(String.join("\t", row));
+//                writer.newLine();
+//            }
+//        }
+//    }
+//
+//    // Load table from a file
+//    public Table loadFromFile(String directoryPath, String tableName) throws IOException {
+//        File file = new File(directoryPath, tableName + DBServer.FILE_EXTENSION);
+//        if (!file.exists()) {
+//            return null;
+//        }
+//
+//        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+//            // Read column headers
+//            String headerLine = reader.readLine();
+//            if (headerLine == null) {
+//                return null;
+//            }
+//
+//            List<String> loadedColumns = Arrays.asList(headerLine.split("\t"));
+//            Table table = new Table(loadedColumns);
+//
+//            // Read data rows
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                String[] values = line.split("\t");
+//                // If there are fewer values than columns, pad with NULLs
+//                List<String> rowValues = new ArrayList<>(Arrays.asList(values));
+//                while (rowValues.size() < loadedColumns.size()) {
+//                    rowValues.add("NULL");
+//                }
+//                table.rows.add(rowValues);
+//            }
+//
+//            return table;
+//        }
+//    }
+//
+//    // Select rows without conditions (return all rows)
+//    public List<List<String>> selectRowsWithoutConditions(List<String> selectedColumns) {
+//        List<List<String>> result = new ArrayList<>();
+//        List<Integer> columnIndices = getColumnIndices(selectedColumns);
+//
+//        for (List<String> row : rows) {
+//            List<String> selectedRow = new ArrayList<>();
+//            for (int index : columnIndices) {
+//                selectedRow.add(row.get(index));
+//            }
+//            result.add(selectedRow);
+//        }
+//
+//        return result;
+//    }
+//
+//    // Select rows with conditions
+//    public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) {
+//        List<List<String>> result = new ArrayList<>();
+//        List<Integer> columnIndices = getColumnIndices(selectedColumns);
+//
+//        for (List<String> row : rows) {
+//            if (matchesConditions(row, conditions)) {
+//                List<String> selectedRow = new ArrayList<>();
+//                for (int index : columnIndices) {
+//                    selectedRow.add(row.get(index));
+//                }
+//                result.add(selectedRow);
+//            }
+//        }
+//
+//        return result;
+//    }
+//
+//    // Update rows that match conditions
+//    public int updateRowsWithConditions(List<String> updateColumns, List<String> updateValues, List<String> conditions) {
+//        int updatedCount = 0;
+//        List<Integer> columnIndices = getColumnIndices(updateColumns);
+//
+//        for (List<String> row : rows) {
+//            if (matchesConditions(row, conditions)) {
+//                for (int i = 0; i < columnIndices.size(); i++) {
+//                    row.set(columnIndices.get(i), updateValues.get(i));
+//                }
+//                updatedCount++;
+//            }
+//        }
+//
+//        return updatedCount;
+//    }
+//
+//    // Delete rows that match conditions
+//    public int deleteRowsWithConditions(List<String> conditions) {
+//        int initialSize = rows.size();
+//        rows.removeIf(row -> matchesConditions(row, conditions));
+//        return initialSize - rows.size();
+//    }
+//
+//    // Helper method to check if a row matches conditions
+//    private boolean matchesConditions(List<String> row, List<String> conditions) {
+//        if (conditions == null || conditions.isEmpty()) {
+//            return true;
+//        }
+//
+//        // Process each condition
+//        for (String condition : conditions) {
+//            // Parse the condition
+//            String[] parts = parseCondition(condition);
+//            if (parts == null || parts.length < 3) {
+//                continue;
+//            }
+//
+//            String columnName = parts[0].trim();
+//            String operator = parts[1].trim();
+//            String value = parts[2].trim();
+//
+//            // Get the column index
+//            int columnIndex = columns.indexOf(columnName);
+//            if (columnIndex == -1) {
+//                return false;
+//            }
+//
+//            // Get the actual value from the row
+//            String rowValue = row.get(columnIndex);
+//
+//            // Remove quotes from value if present
+//            if ((value.startsWith("'") && value.endsWith("'")) ||
+//                    (value.startsWith("\"") && value.endsWith("\""))) {
+//                value = value.substring(1, value.length() - 1);
+//            }
+//
+//            // Check the condition
+//            if (!evaluateCondition(rowValue, operator, value)) {
+//                return false;
+//            }
+//        }
+//
+//        return true;
+//    }
+//
+//    // Helper method to parse a condition string into components
+//    private String[] parseCondition(String condition) {
+//        String[] operators = {"==", "!=", ">=", "<=", ">", "<", "LIKE"};
+//
+//        for (String op : operators) {
+//            int index = condition.indexOf(op);
+//            if (index > 0) {
+//                String column = condition.substring(0, index).trim();
+//                String value = condition.substring(index + op.length()).trim();
+//                return new String[]{column, op, value};
+//            }
+//        }
+//
+//        // If no recognized operator, try with =
+//        int index = condition.indexOf("=");
+//        if (index > 0) {
+//            String column = condition.substring(0, index).trim();
+//            String value = condition.substring(index + 1).trim();
+//            return new String[]{column, "==", value};
+//        }
+//
+//        return null;
+//    }
+//
+//    // Helper method to evaluate a single condition
+//    private boolean evaluateCondition(String rowValue, String operator, String targetValue) {
+//        // Handle null values
+//        if (rowValue.equals("NULL") || targetValue.equals("NULL")) {
+//            if (operator.equals("==")) return rowValue.equals(targetValue);
+//            if (operator.equals("!=")) return !rowValue.equals(targetValue);
+//            return false; // Other comparisons with NULL are false
+//        }
+//
+//        // Try numeric comparison if both values are numeric
+//        try {
+//            double rowNum = Double.parseDouble(rowValue);
+//            double targetNum = Double.parseDouble(targetValue);
+//
+//            switch (operator) {
+//                case "==": return rowNum == targetNum;
+//                case "!=": return rowNum != targetNum;
+//                case ">": return rowNum > targetNum;
+//                case "<": return rowNum < targetNum;
+//                case ">=": return rowNum >= targetNum;
+//                case "<=": return rowNum <= targetNum;
+//                default: return false;
+//            }
+//        } catch (NumberFormatException e) {
+//            // If not numeric, do string comparison
+//            switch (operator) {
+//                case "==": return rowValue.equals(targetValue);
+//                case "!=": return !rowValue.equals(targetValue);
+//                case ">": return rowValue.compareTo(targetValue) > 0;
+//                case "<": return rowValue.compareTo(targetValue) < 0;
+//                case ">=": return rowValue.compareTo(targetValue) >= 0;
+//                case "<=": return rowValue.compareTo(targetValue) <= 0;
+//                case "LIKE": return rowValue.contains(targetValue);
+//                default: return false;
+//            }
+//        }
+//    }
+//
+//    // Helper method to get column indices for selected columns
+//    private List<Integer> getColumnIndices(List<String> selectedColumns) {
+//        List<Integer> indices = new ArrayList<>();
+//
+//        // If '*' is included, return all columns
+//        if (selectedColumns.contains("*")) {
+//            for (int i = 0; i < columns.size(); i++) {
+//                indices.add(i);
+//            }
+//            return indices;
+//        }
+//
+//        // Otherwise, get indices for the specified columns
+//        for (String column : selectedColumns) {
+//            int index = columns.indexOf(column);
+//            if (index != -1) {
+//                indices.add(index);
+//            }
+//        }
+//
+//        return indices;
+//    }
+//
+//    // Generate a new unique ID for inserting rows
+//    public int getNextId() {
+//        int maxId = 0;
+//        int idIndex = columns.indexOf("id");
+//
+//        if (idIndex != -1) {
+//            for (List<String> row : rows) {
+//                try {
+//                    int id = Integer.parseInt(row.get(idIndex));
+//                    if (id > maxId) {
+//                        maxId = id;
+//                    }
+//                } catch (NumberFormatException e) {
+//                    // Skip non-numeric IDs
+//                }
+//            }
+//        }
+//
+//        return maxId + 1;
+//    }
+//
+//    // Insert a new row with values
+//    public boolean insertRow(List<String> values) {
+//        // Ensure we have correct number of values
+//        if (values.size() != columns.size() - 1) { // -1 because we'll add ID
+//            return false;
+//        }
+//
+//        // Create a new row with ID
+//        List<String> newRow = new ArrayList<>();
+//        newRow.add(String.valueOf(getNextId())); // Add ID as first column
+//        newRow.addAll(values);
+//
+//        // Add the row
+//        rows.add(newRow);
+//        return true;
+//    }
+//
+//    public List<List<String>> joinWith(Table other, String column1, String column2) {
+//        int column1Index = this.columns.indexOf(column1);
+//        int column2Index = other.getColumns().indexOf(column2);
+//
+//        List<List<String>> result = new ArrayList<>();
+//
+//        for (List<String> row1 : rows) {
+//            for (List<String> row2 : other.getRows()) {
+//                if (row1.get(column1Index).equals(row2.get(column2Index))) {
+//                    // Combine the rows
+//                    List<String> combinedRow = new ArrayList<>(row1);
+//                    combinedRow.addAll(row2);
+//                    result.add(combinedRow);
+//                }
+//            }
+//        }
+//
+//        return result;
+//    }
+//
+//    public List<List<String>> getRows() {
+//        return rows;
+//    }
+//}
