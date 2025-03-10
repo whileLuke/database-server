@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.stream.Collectors;
+import java.util.Iterator;
 
 public class Table implements Serializable {
     private static final String FILE_EXTENSION = ".tab";
@@ -136,6 +137,7 @@ public class Table implements Serializable {
         }
         return selectedRow;
     }
+
 
 
    /* private List<Integer> getColumnIndexes(List<String> selectedColumns) {
@@ -410,6 +412,65 @@ public class Table implements Serializable {
         }
 
     }
+
+    public int updateRowsWithConditions(List<String> columnsToUpdate, List<String> newValues, List<String> conditions) throws Exception {
+        int updateCount = 0;
+
+        for (List<String> row : rows) {
+            // Check if the row matches the conditions
+            if (isRowMatchConditions(row, conditions, columns)) {
+                // Update each specified column
+                for (int i = 0; i < columnsToUpdate.size(); i++) {
+                    int colIndex = columns.indexOf(columnsToUpdate.get(i));
+                    if (colIndex != -1) {
+                        row.set(colIndex, newValues.get(i));
+                    }
+                }
+                updateCount++; // Increment the counter
+            }
+        }
+
+        return updateCount;
+    }
+
+    public List<List<String>> joinWith(Table other, String column1, String column2) {
+        int column1Index = this.columns.indexOf(column1);
+        int column2Index = other.getColumns().indexOf(column2);
+
+        List<List<String>> result = new ArrayList<>();
+
+        for (List<String> row1 : rows) {
+            for (List<String> row2 : other.getRows()) {
+                if (row1.get(column1Index).equals(row2.get(column2Index))) {
+                    // Combine the rows
+                    List<String> combinedRow = new ArrayList<>(row1);
+                    combinedRow.addAll(row2);
+                    result.add(combinedRow);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public int deleteRowsWithConditions(List<String> conditions) throws Exception {
+        int deleteCount = 0;
+
+        // Use an iterator to avoid ConcurrentModificationException
+        Iterator<List<String>> iter = rows.iterator();
+        while (iter.hasNext()) {
+            List<String> row = iter.next();
+
+            // Check if row matches ALL conditions
+            if (isRowMatchConditions(row, conditions, columns)) { // Use the existing method
+                iter.remove(); // Remove the row
+                deleteCount++;
+            }
+        }
+
+        return deleteCount;
+    }
+
 
     //public String selectColumnsWithCondition(List<String> columnNames, Condition condition) {
 

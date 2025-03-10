@@ -20,7 +20,7 @@ public class InsertCommand extends DBCommand {
             return "[ERROR] Table '" + tableName + "' does not exist.";
         }
         //server.tables.put(tableName, table);
-                //server.tables.get(tableName);
+        //server.tables.get(tableName);
         //REDO THIS. LIKE HOW I REDID DROP TABLE.
         //basically server.tables is NEVERRRR containing tables annoyingly
         //if (!tableFile.exists()) {
@@ -28,6 +28,9 @@ public class InsertCommand extends DBCommand {
         //}
         int id = table.generateNextID();
         //int id = server.tables.get(0);
+        for (int i = 0; i < values.size(); i++) {
+            values.set(i, removeQuotes(values.get(i))); // Replace each value in place
+        }
         ArrayList<String> rowValues = new ArrayList<>(values);
         /*if (!table.getColumns().get(0).equalsIgnoreCase("id")) {
             rowValues.add(0, String.valueOf(id));
@@ -42,4 +45,14 @@ public class InsertCommand extends DBCommand {
         }
     }
 
+    private String removeQuotes(String value) {
+        if (value == null) return "";
+        if ((value.startsWith("'") && value.endsWith("'")) ||
+                (value.startsWith("\"") && value.endsWith("\""))) {
+            return value.substring(1, value.length() - 1);
+        }
+        return value;
+    }
 }
+
+
