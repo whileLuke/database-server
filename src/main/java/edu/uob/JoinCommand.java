@@ -34,9 +34,17 @@ public class JoinCommand extends DBCommand {
 
         // Format and return the result
         List<String> combinedColumnNames = new ArrayList<>(table1.getColumns());
+        boolean table1HasId = table1.hasColumn("id");
+        boolean table2HasId = table2.hasColumn("id");
+
+        // Add table2 columns, renaming "id" and excluding join columns
         for (String col : table2.getColumns()) {
             if (!col.equals(column2) && !col.equals(column1)) {
-                combinedColumnNames.add(col);
+                if (table1HasId && table2HasId && col.equals("id")) {
+                    combinedColumnNames.add(table2Name + ".id");  // Rename second 'id' column
+                } else {
+                    combinedColumnNames.add(col);
+                }
             }
         }
         //GET JOINRESULT WORKING. PUT THE VALUES THAT AREIN BOTH.
@@ -45,8 +53,12 @@ public class JoinCommand extends DBCommand {
 
     private String formatResult(List<String> columnNames, List<List<String>> rows) {
         StringBuilder result = new StringBuilder();
+        //Doubles up the OKs
+        result.append("[OK]\n");
         result.append(String.join("\t", columnNames)).append("\n");
-
+        if (rows.isEmpty()) {
+            result.append("[DEBUG] No matching rows to display.\n");
+        }
         for (List<String> row : rows) {
             result.append(String.join("\t", row)).append("\n");
         }
