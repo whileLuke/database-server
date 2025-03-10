@@ -18,12 +18,12 @@ public class DBServer {
     private String query;
     public static String currentDB;
     public static Map<String, Table> tables = new HashMap<String, Table>();
-    String[] specialCharacters = {"(",")",",",";"};
+    String[] specialCharacters = {"(",")",",",";",">=","<=","==","!="/*,">","<","="*/};
     ArrayList<String> tokens = new ArrayList<String>();
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
-        server.blockingListenOn(8887);
+        server.blockingListenOn(8888);
     }
 
     /**

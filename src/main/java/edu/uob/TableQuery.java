@@ -223,22 +223,37 @@ public class TableQuery {
     }
 
     public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) throws Exception {
+        System.out.println("[DEBUG] selectRowsWithConditions called with columns: " + selectedColumns + ", conditions: " + conditions);
+        ConditionParser conditionParser = new ConditionParser(conditions);
+        ConditionNode conditionTree = conditionParser.parse();
         List<Integer> columnIndexes = getColumnIndexes(selectedColumns);
         if (columnIndexes.isEmpty()) {
-            return new ArrayList<>();  // Return empty list if any column doesn't exist
+            return new ArrayList<>();
         }
 
         List<List<String>> selectedRows = new ArrayList<>();
+        System.out.println("[DEBUG] Table rows: " + table.getRows());
         for (List<String> row : table.getRows()) {
-            if (evaluator.isRowMatchConditions(row, conditions, table.getColumns())) {
+            System.out.println("[DEBUG] Table row: " + row);
+            boolean matches = evaluator.isRowMatchConditions(row, selectedColumns, table.getColumns());
+            System.out.println("[DEBUG] Checking row: " + row + " -> Matches Condition: " + matches);
+            if (matches) {
+                System.out.println("[DEBUG] Row matched: " + row);
                 List<String> selectedRowValues = new ArrayList<>();
                 for (int index : columnIndexes) {
                     selectedRowValues.add(row.get(index));
                 }
                 selectedRows.add(selectedRowValues);
+                System.out.println("[DEBUG] [MATCH] Selected row: " + selectedRowValues);
             }
+            /*if (conditionTree.evaluate(row, table.getColumns())) {
+                List<String> selectedRowValues = new ArrayList<>();
+                for (int index : columnIndexes) {
+                    selectedRowValues.add(row.get(index));
+                }
+                selectedRows.add(selectedRowValues);
+            }*/
         }
-
         return selectedRows;
     }
 }
