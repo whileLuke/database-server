@@ -87,13 +87,21 @@ public class DBServer {
     }
 
     String[] tokenise(String input) {
-        for (int i=0; i<specialCharacters.length ;i++) {
+        System.out.println("[DEBUG] Raw input before tokenization: " + input);
+
+        for (int i = 0; i < specialCharacters.length; i++) {
             input = input.replace(specialCharacters[i], " " + specialCharacters[i] + " ");
         }
-        while (input.contains("  ")) input = input.replace("  ", " "); // Replace two spaces by one
+
+        while (input.contains("  ")) input = input.replace("  ", " "); // Replace double spaces with single
         input = input.trim();
-        return input.split(" ");
+
+        String[] tokens = input.split(" ");
+        System.out.println("[DEBUG] Tokenized command: " + Arrays.toString(tokens));
+
+        return tokens;
     }
+
 
     public boolean saveCurrentDB() throws IOException {
         if (currentDB == null) {

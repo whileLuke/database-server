@@ -5,33 +5,39 @@ import java.util.*;
 public class ConditionEvaluator {
 
     public boolean isRowMatchConditions(List<String> row, List<String> conditions, List<String> columns) throws Exception {
+        System.out.println("[DEBUG] Evaluating row: " + row + " against conditions: " + conditions);
+
         List<String> tokens = tokeniseConditions(conditions);
+        System.out.println("[DEBUG] Tokenized condition: " + tokens);
+
         return evaluateExpression(tokens, row, columns);
     }
 
     private boolean evaluateCondition(String rowValue, String conditionValue, String operator) {
         System.out.println("[DEBUG] Evaluating: '" + rowValue + "' " + operator + " '" + conditionValue + "'");
 
-        // Try parsing as a number
+        // Check for numeric comparison
         try {
-            double numRowValue = Double.parseDouble(rowValue);
-            double numConditionValue = Double.parseDouble(conditionValue);
+            double numRowValue = Double.parseDouble(rowValue.trim());
+            double numConditionValue = Double.parseDouble(conditionValue.trim());
+            System.out.println("[DEBUG] Numeric Comparison: " + numRowValue + " " + operator + " " + numConditionValue);
 
             switch (operator) {
                 case ">": return numRowValue > numConditionValue;
                 case "<": return numRowValue < numConditionValue;
                 case ">=": return numRowValue >= numConditionValue;
                 case "<=": return numRowValue <= numConditionValue;
+                case "==": return numRowValue == numConditionValue;
+                case "!=": return numRowValue != numConditionValue;
             }
         } catch (NumberFormatException e) {
-            // Not a number, do string comparison instead
-            System.out.println("[DEBUG] Treating as string: '" + rowValue + "' " + operator + " '" + conditionValue + "'");
+            System.out.println("[DEBUG] Not a number, treating as a string: " + rowValue);
         }
 
+
+        // String comparison
         switch (operator) {
-            case "==":
-                System.out.println("[DEBUG] Comparing Strings: '" + rowValue.trim() + "' == '" + conditionValue.trim() + "'");
-                return rowValue.trim().equals(conditionValue.trim());
+            case "==": return rowValue.trim().equals(conditionValue.trim());
             case "!=": return !rowValue.equals(conditionValue);
             case "LIKE": return rowValue.contains(conditionValue);
             default:
@@ -39,6 +45,7 @@ public class ConditionEvaluator {
                 return false;
         }
     }
+
 
     private boolean evaluateExpression(List<String> tokens, List<String> row, List<String> columns) {
         boolean result = false;
@@ -63,6 +70,8 @@ public class ConditionEvaluator {
                 System.out.println("[ERROR] Column not found: " + column);
                 return false;
             }
+            System.out.println("[DEBUG] Column '" + column + "' found at index: " + columnIndex);
+
 
             boolean conditionResult = evaluateCondition(row.get(columnIndex), value, operator);
             System.out.println("[DEBUG] Evaluating condition: " + column + " " + operator + " " + value + " -> " + conditionResult);
@@ -105,6 +114,7 @@ public class ConditionEvaluator {
     private List<String> tokeniseConditions(List<String> conditions) {
         List<String> tokens = new ArrayList<>();
         for (String condition : conditions) {
+            System.out.println("[DEBUG] Raw condition: " + condition);
             String[] parts = condition.split("(?=[()])|(?<=[()])|\\s+");
             for (String part : parts) {
                 if (!part.isBlank()) {
@@ -112,7 +122,9 @@ public class ConditionEvaluator {
                 }
             }
         }
+        System.out.println("[DEBUG] Tokenized condition: " + tokens);
         return tokens;
     }
+
 
 }

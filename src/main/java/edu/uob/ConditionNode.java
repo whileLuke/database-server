@@ -2,7 +2,7 @@ package edu.uob;
 
 import java.util.List;
 
-abstract class ConditionNode {
+public abstract class ConditionNode {
     abstract boolean evaluate(List<String> row, List<String> columns);
 }
 
@@ -20,11 +20,27 @@ class SimpleCondition extends ConditionNode {
     @Override
     boolean evaluate(List<String> row, List<String> columns) {
         int index = columns.indexOf(column);
-        if (index == -1) return false;
+        if (index == -1) {
+            System.out.println("[ERROR] Column '" + column + "' not found in table!");
+            return false;
+        }
+
         String rowValue = row.get(index).trim();
+        System.out.println("[DEBUG] Evaluating condition: Column = " + column + ", Row Value = '" + rowValue + "', Operator = '" + operator + "', Condition Value = '" + value + "'");
+
+        // Check if the condition value is quoted
+        String conditionValue = value;
+        if ((value.startsWith("\"") && value.endsWith("\"")) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+            conditionValue = value.substring(1, value.length() - 1).trim();
+        }
+
         try {
+            // Attempt numeric comparison if both values are numeric
             double rowNum = Double.parseDouble(rowValue);
-            double compNum = Double.parseDouble(value);
+            double compNum = Double.parseDouble(conditionValue);
+            System.out.println("[DEBUG] Numeric Comparison: " + rowNum + " " + operator + " " + compNum);
+
             return switch (operator) {
                 case ">" -> rowNum > compNum;
                 case ">=" -> rowNum >= compNum;
@@ -35,10 +51,13 @@ class SimpleCondition extends ConditionNode {
                 default -> false;
             };
         } catch (NumberFormatException ignored) {
+            // String comparison
+            System.out.println("[DEBUG] String Comparison: '" + rowValue + "' " + operator + " '" + conditionValue + "'");
+
             return switch (operator) {
-                case "==" -> rowValue.equals(value.replace("\"", ""));
-                case "!=" -> !rowValue.equals(value.replace("\"", ""));
-                case "LIKE" -> rowValue.contains(value.replace("\"", ""));
+                case "==" -> rowValue.equals(conditionValue);
+                case "!=" -> !rowValue.equals(conditionValue);
+                case "LIKE" -> rowValue.contains(conditionValue);
                 default -> false;
             };
         }

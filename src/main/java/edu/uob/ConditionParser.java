@@ -11,7 +11,21 @@ public class ConditionParser {
     }
 
     public ConditionNode parse() {
-        return parseOr();
+        if (tokens.isEmpty()) {
+            System.out.println("[ERROR] No tokens to parse in WHERE clause.");
+            return null;
+        }
+        System.out.println("[DEBUG] Parsing WHERE conditions: " + tokens);
+
+        ConditionNode node = parseOr();
+
+        if (node == null) {
+            System.out.println("[ERROR] Condition tree was NOT built correctly!");
+        } else {
+            System.out.println("[DEBUG] Condition tree successfully built.");
+        }
+
+        return node;
     }
 
     private ConditionNode parseOr() {
@@ -43,7 +57,7 @@ public class ConditionParser {
     }
 
     private ConditionNode parsePrimary() {
-        if (tokens.get(index).equals("(")) {
+        if (index < tokens.size() && tokens.get(index).equals("(")) {
             index++;  // Skip '('
             ConditionNode node = parseOr();
             index++;  // Skip ')'
@@ -53,13 +67,18 @@ public class ConditionParser {
     }
 
     private ConditionNode parseCondition() {
+        if (index + 2 >= tokens.size()) {
+            System.out.println("[ERROR] Incomplete condition at index " + index);
+            return null;
+        }
+
         String column = tokens.get(index++);
         String operator = tokens.get(index++);
-        String value = tokens.get(index++);
-        return new SimpleCondition(column, operator, value);
-    }
 
-    private List<String> tokenize(String conditionString) {
-        return Arrays.asList(conditionString.replace("(", " ( ").replace(")", " ) ").split("\\s+"));
+        // Handle quoted string values (preserve the quotes)
+        String value = tokens.get(index++);
+
+        System.out.println("[DEBUG] Created condition: " + column + " " + operator + " " + value);
+        return new SimpleCondition(column, operator, value);
     }
 }

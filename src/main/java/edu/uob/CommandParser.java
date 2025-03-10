@@ -138,28 +138,42 @@ public class CommandParser extends DBServer {
         if (startId < tokens.size() && tokens.get(startId).equalsIgnoreCase("WHERE")) {
             List<String> conditions = new ArrayList<>();
             StringBuilder condition = new StringBuilder();
+            boolean inQuotes = false;
+
             for (int i = startId + 1; i < tokens.size(); i++) {
-                String token = tokens.get(i).replace(";", "");
-                if (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR")) {
+                String token = tokens.get(i).replace(";", ""); // Remove semicolon
+
+                // Check for quotes to preserve them in conditions
+                if (token.startsWith("\"") && !token.endsWith("\"") || token.startsWith("'") && !token.endsWith("'")) {
+                    inQuotes = true;
+                } else if ((token.endsWith("\"") && !token.startsWith("\"")) || (token.endsWith("'") && !token.startsWith("'"))) {
+                    inQuotes = false;
+                }
+
+                if (!inQuotes && (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR"))) {
                     if (!condition.isEmpty()) {
                         conditions.add(condition.toString().trim());
-                        condition.setLength(0); // Clear for the next condition
+                        condition.setLength(0); // Clear for next condition
                     }
+                    condition.append(token).append(" ");
+                } else {
+                    condition.append(token).append(" ");
                 }
-                condition.append(token).append(" ");
             }
+
             if (!condition.isEmpty()) {
-                conditions.add(condition.toString().trim()); // Add the last condition
+                conditions.add(condition.toString().trim()); // Add last condition
             }
+
+            System.out.println("[DEBUG] Extracted WHERE conditions: " + conditions);
+
             if (cmd instanceof SelectCommand) {
                 ((SelectCommand) cmd).setConditions(conditions);
-            } else if (cmd instanceof DeleteCommand) {
-                ((DeleteCommand) cmd).setConditions(conditions);
-            } else if (cmd instanceof UpdateCommand) {
-                ((UpdateCommand) cmd).setConditions(conditions);
             }
         }
     }
+
+
 
     private DBCommand parseUpdate() {
         if (tokens.size() < 7 || !tokens.get(2).equalsIgnoreCase("SET")) return null;
