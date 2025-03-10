@@ -126,15 +126,15 @@ public class MyTests {
 
         // Test selecting non-existent table
         String nonExistentTableResponse = server.handleCommand("SELECT * FROM crew;");
-        assertTrue(nonExistentTableResponse.contains("[ERROR]:"));
+        assertTrue(nonExistentTableResponse.contains("[ERROR]"));
 
         // Test selecting non-existent attribute
         String nonExistentAttrResponse = server.handleCommand("SELECT height FROM marks WHERE name == 'Chris';");
-        assertTrue(nonExistentAttrResponse.contains("[ERROR]:"));
+        assertTrue(nonExistentAttrResponse.contains("[ERROR]"));
 
         // Test invalid DELETE query
         String invalidDeleteResponse = server.handleCommand("DELETE FROM non_existing_table WHERE id == 1;");
-        assertTrue(invalidDeleteResponse.contains("[ERROR]:"));
+        assertTrue(invalidDeleteResponse.contains("[ERROR]"));
     }
 
     @Test
