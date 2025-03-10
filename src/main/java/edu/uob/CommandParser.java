@@ -181,7 +181,7 @@ public class CommandParser extends DBServer {
 
 
     private DBCommand parseJoin() {
-        if (tokens.size() != 8) return null;
+        if (tokens.size() != 9) return null;
 
         JoinCommand cmd = new JoinCommand();
         if (!tokens.get(2).equalsIgnoreCase("AND") || !tokens.get(4).equalsIgnoreCase("ON") || !tokens.get(6).equalsIgnoreCase("AND"))

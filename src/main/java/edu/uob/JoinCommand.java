@@ -8,9 +8,7 @@ public class JoinCommand extends DBCommand {
     @Override
     public String query(DBServer server) throws IOException {
         //loadTables(currentDB);
-        if (tableNames.size() != 2) {
-            return "[ERROR] JOIN needs two table names.";
-        }
+        if (tableNames.size() != 2) return "[ERROR] JOIN needs two table names.";
 
         String table1Name = tableNames.get(0).toLowerCase();
         String table2Name = tableNames.get(1).toLowerCase();
@@ -36,8 +34,13 @@ public class JoinCommand extends DBCommand {
 
         // Format and return the result
         List<String> combinedColumnNames = new ArrayList<>(table1.getColumns());
-        combinedColumnNames.addAll(table2.getColumns()); // Avoid duplicate column logic for simplicity here
-        return formatResult(combinedColumnNames, joinResult);
+        for (String col : table2.getColumns()) {
+            if (!col.equals(column2) && !col.equals(column1)) {
+                combinedColumnNames.add(col);
+            }
+        }
+        //GET JOINRESULT WORKING. PUT THE VALUES THAT AREIN BOTH.
+        return "[OK]\n" + formatResult(combinedColumnNames, joinResult);
     }
 
     private String formatResult(List<String> columnNames, List<List<String>> rows) {

@@ -179,11 +179,19 @@ public class TableQuery {
         }
 
         List<List<String>> result = new ArrayList<>();
+
         for (List<String> row1 : table.getRows()) {
             for (List<String> row2 : otherTable.getRows()) {
                 if (row1.get(thisColumnIndex).equals(row2.get(otherColumnIndex))) {
                     List<String> combinedRow = new ArrayList<>(row1);
-                    combinedRow.addAll(row2);
+
+                    // Add columns from row2, skipping the join column
+                    for (int i = 0; i < row2.size(); i++) {
+                        if (i != otherColumnIndex) { // Avoid duplicate join column
+                            combinedRow.add(row2.get(i));
+                        }
+                    }
+
                     result.add(combinedRow);
                 }
             }
