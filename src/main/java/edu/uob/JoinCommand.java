@@ -33,18 +33,18 @@ public class JoinCommand extends DBCommand {
         List<List<String>> joinResult = tableQuery.joinWith(table2, column1, column2);
 
         // Format and return the result
-        List<String> combinedColumnNames = new ArrayList<>(table1.getColumns());
-        boolean table1HasId = table1.hasColumn("id");
-        boolean table2HasId = table2.hasColumn("id");
-
+        List<String> combinedColumnNames = new ArrayList<>();
+        //boolean table1HasId = table1.hasColumn("id");
+        //boolean table2HasId = table2.hasColumn("id");
+        for (String col : table1.getColumns()) {
+            //if (!col.equals(column1) /*&& !col.equals(column1)*/) {
+            combinedColumnNames.add(table1Name + "." + col);
+            //}
+        }
         // Add table2 columns, renaming "id" and excluding join columns
         for (String col : table2.getColumns()) {
-            if (!col.equals(column2) && !col.equals(column1)) {
-                if (table1HasId && table2HasId && col.equals("id")) {
-                    combinedColumnNames.add(table2Name + ".id");  // Rename second 'id' column
-                } else {
-                    combinedColumnNames.add(col);
-                }
+            if (!col.equals(column2) /*&& !col.equals(column1)*/) {
+                combinedColumnNames.add(table2Name + "." + col);
             }
         }
         //GET JOINRESULT WORKING. PUT THE VALUES THAT AREIN BOTH.
