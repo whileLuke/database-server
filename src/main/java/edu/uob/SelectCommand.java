@@ -137,8 +137,13 @@ public class SelectCommand extends DBCommand {
     }
 
     private boolean isLiteralValue(String value) {
-        String literalRegex = "^-?\\d+(\\.\\d+)?$|^(TRUE|FALSE|NULL)$";
-        return value.matches(literalRegex);
+        if ("NULL".equals(value) || "TRUE".equals(value) || "FALSE".equals(value)) return true;
+        try {
+            Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private String formatRows(List<String> columns, List<List<String>> rows) {
