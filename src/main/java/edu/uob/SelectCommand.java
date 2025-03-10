@@ -11,6 +11,7 @@ public class SelectCommand extends DBCommand {
     @Override
     public String query(DBServer server) throws Exception {
         //loadTables(currentDB);
+        System.out.println("[DEBUG] Query called with conditions: " + conditions);
         if (currentDB == null) return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
         System.out.println("Tokens: " + tokens);
         if (tableNames.isEmpty()) return "[ERROR] Table name missing in SELECT query.";
@@ -54,6 +55,7 @@ public class SelectCommand extends DBCommand {
                 // For selection with conditions, use the query method
                 // Note: You'll need to adapt this part based on how you want to handle the return value
                 // since the original returns formatted strings but you need raw data
+                System.out.println("[DEBUG] Conditions passed to selectRowsWithConditions:" + conditions);
                 filteredRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
             }
         } catch (Exception e) {
@@ -64,7 +66,7 @@ public class SelectCommand extends DBCommand {
 
         // Format the result
         if (filteredRows.isEmpty()) {
-            return "[OK]"; // No rows match, return only [OK]
+            return "[OK] No matching rows";
         }
         return "[OK]\n" + formatRows(selectedColumns, filteredRows);
 
@@ -147,6 +149,7 @@ public class SelectCommand extends DBCommand {
     }
 
     private String formatRows(List<String> columns, List<List<String>> rows) {
+        if (rows.isEmpty()) return "[OK] No rows matched.";
         StringBuilder builder = new StringBuilder();
 
         // Add the column headers
@@ -158,7 +161,7 @@ public class SelectCommand extends DBCommand {
             builder.append(String.join("\t", row));
             builder.append("\n");
         }
-
+        System.out.println("[DEBUG] Formatted rows: \n" + builder.toString());
         return builder.toString().trim(); // Remove the trailing newline
     }
 }

@@ -222,23 +222,96 @@ public class TableQuery {
         return columnIndexes;
     }
 
-    public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) throws Exception {
-        List<Integer> columnIndexes = getColumnIndexes(selectedColumns);
-        if (columnIndexes.isEmpty()) {
-            return new ArrayList<>();  // Return empty list if any column doesn't exist
+    public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) {
+        System.out.println("[DEBUG] selectRowsWithConditions called with columns: " + selectedColumns + ", conditions: " + conditions);
+
+        // Get all rows from the table
+        List<List<String>> allRows = table.getRows();
+        List<String> tableColumns = table.getColumns();
+
+        // Parse and build the condition tree
+        ConditionParser parser = new ConditionParser(tokeniseConditions(conditions));
+        ConditionNode conditionTree = parser.parse();
+
+        if (conditionTree == null) {
+            System.out.println("[ERROR] Failed to parse conditions");
+            return new ArrayList<>();
         }
 
-        List<List<String>> selectedRows = new ArrayList<>();
-        for (List<String> row : table.getRows()) {
-            if (evaluator.isRowMatchConditions(row, conditions, table.getColumns())) {
-                List<String> selectedRowValues = new ArrayList<>();
-                for (int index : columnIndexes) {
-                    selectedRowValues.add(row.get(index));
+        // Filter rows based on the condition
+        List<List<String>> matchingRows = new ArrayList<>();
+        for (List<String> row : allRows) {
+            if (conditionTree.evaluate(row, tableColumns)) {
+                System.out.println("[DEBUG] Found matching row: " + row);
+
+                // Extract only the selected columns
+                List<String> selectedValues = new ArrayList<>();
+                for (String colName : selectedColumns) {
+                    int colIndex = tableColumns.indexOf(colName);
+                    if (colIndex != -1) {
+                        selectedValues.add(row.get(colIndex));
+                    }
                 }
-                selectedRows.add(selectedRowValues);
+                matchingRows.add(selectedValues);
             }
         }
 
-        return selectedRows;
+        System.out.println("[DEBUG] Matching rows found: " + matchingRows.size());
+        return matchingRows;
     }
+
+    private List<String> tokeniseConditions(List<String> conditions) {
+        List<String> tokens = new ArrayList<>();
+
+        for (String condition : conditions) {
+            String[] parts = condition.split("\\s+");
+            for (String part : parts) {
+                if (!part.isEmpty()) {
+                    tokens.add(part);
+                }
+            }
+        }
+
+        System.out.println("[DEBUG] Tokenized conditions: " + tokens);
+        return tokens;
+    }
+
+    /*public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) {
+        List<List<String>> resultRows = new ArrayList<>();
+        List<List<String>> allRows = table.getRows();
+        List<String> tableColumns = table.getColumns();
+
+        System.out.println("[DEBUG] selectRowsWithConditions called with columns: " + selectedColumns + ", conditions: " + conditions);
+
+        if (conditions.isEmpty()) {
+            System.out.println("[DEBUG] No conditions given, returning all rows.");
+            return allRows;
+        }
+
+        ConditionParser parser = new ConditionParser(conditions);
+        ConditionNode rootCondition = parser.parse();
+
+        if (rootCondition == null) {
+            System.out.println("[ERROR] Condition parsing failed! No valid condition tree was built.");
+            return new ArrayList<>();
+        }
+
+        // 🔍 Iterate through rows and evaluate conditions
+        for (List<String> row : allRows) {
+            System.out.println("[DEBUG] Checking row: " + row);
+
+            boolean matches = rootCondition.evaluate(row, tableColumns);
+            System.out.println("[DEBUG] Condition evaluation result for row " + row + " -> " + matches);
+
+            if (matches) {
+                System.out.println("[DEBUG] Row matches conditions! Adding: " + row);
+                resultRows.add(row);
+            } else {
+                System.out.println("[DEBUG] Row does NOT match conditions.");
+            }
+        }
+
+        System.out.println("[DEBUG] Matching rows found: " + resultRows.size());
+        return resultRows;
+    }*/
 }

@@ -10,20 +10,13 @@ public class TableFormatter {
 
     public static String formatRows(List<String> columns, List<List<String>> rows) {
         StringBuilder result = new StringBuilder();
-
-        // Add column headers
         result.append(String.join("\t", columns)).append("\n");
-
-        // Add rows
         for (List<String> row : rows) {
             result.append(String.join("\t", row)).append("\n");
         }
-
-        // Trim trailing newline if needed
         if (result.length() > 0) {
             result.setLength(result.length() - 1);
         }
-
         return result.toString();
     }
 }

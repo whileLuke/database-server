@@ -3,6 +3,7 @@ package edu.uob;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 
 public class DeleteCommand extends DBCommand {
     private List<String> conditions = new ArrayList<>();
@@ -11,34 +12,64 @@ public class DeleteCommand extends DBCommand {
 
     @Override
     public String query(DBServer server) throws IOException {
-        //loadTables(currentDB);
-        if (tableNames.isEmpty()) return "[ERROR] No table specified for deletion.";
+        if (tableNames.isEmpty()) {
+            return "[ERROR] No table specified for deletion.";
+        }
 
         String tableName = tableNames.get(0).toLowerCase();
         Table table = tables.get(tableName);
+
         if (table == null) {
             return "[ERROR] Table '" + tableName + "' does not exist.";
         }
+
         if (conditions.isEmpty()) {
             return "[ERROR] DELETE command requires a WHERE condition.";
         }
 
-        // Delete rows matching the conditions
         try {
-            // Table does the actual deletion
-            TableQuery tableQuery = new TableQuery(table);
-            int rowsDeleted = tableQuery.deleteRowsWithConditions(conditions);
-            if (rowsDeleted > 0) {
-                if (server.saveCurrentDB()) {
-                    return "[OK] " + rowsDeleted + " row(s) deleted.";
-                } else {
-                    return "[ERROR] Failed to save updated table to disk.";
+            List<List<String>> rows = table.getRows();
+            List<String> columns = table.getColumns();
+
+            // Create condition parser with tokenized conditions
+            ConditionParser parser = new ConditionParser(tokenizeConditions(conditions));
+            ConditionNode conditionTree = parser.parse();
+
+            int initialRowCount = rows.size();
+            Iterator<List<String>> iterator = rows.iterator();
+
+            // Delete rows that match the condition
+            while (iterator.hasNext()) {
+                List<String> row = iterator.next();
+                if (conditionTree.evaluate(row, columns)) {
+                    iterator.remove();
                 }
+            }
+
+            int deletedRows = initialRowCount - rows.size();
+
+            if (deletedRows > 0) {
+                saveCurrentDB();
+                return "[OK] " + deletedRows + " row(s) deleted.";
             } else {
                 return "[ERROR] No rows matched the delete condition.";
             }
         } catch (Exception e) {
-            return "[ERROR] Failed to process delete conditions: " + e.getMessage();
+            return "[ERROR] Failed to process delete operation: " + e.getMessage();
         }
+    }
+
+    private List<String> tokenizeConditions(List<String> conditions) {
+        List<String> tokens = new ArrayList<>();
+        for (String condition : conditions) {
+            // Split condition while preserving operators
+            String[] parts = condition.split("\\s+");
+            for (String part : parts) {
+                if (!part.isEmpty()) {
+                    tokens.add(part);
+                }
+            }
+        }
+        return tokens;
     }
 }

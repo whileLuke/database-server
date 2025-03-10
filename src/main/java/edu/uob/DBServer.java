@@ -18,12 +18,12 @@ public class DBServer {
     private String query;
     public static String currentDB;
     public static Map<String, Table> tables = new HashMap<String, Table>();
-    String[] specialCharacters = {"(",")",",",";"};
+    String[] specialCharacters = {"(",")",",",";",">=","<=","==","!="/*,">","<","="*/};
     ArrayList<String> tokens = new ArrayList<String>();
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
-        server.blockingListenOn(8887);
+        server.blockingListenOn(8888);
     }
 
     /**
@@ -87,13 +87,21 @@ public class DBServer {
     }
 
     String[] tokenise(String input) {
-        for (int i=0; i<specialCharacters.length ;i++) {
+        System.out.println("[DEBUG] Raw input before tokenization: " + input);
+
+        for (int i = 0; i < specialCharacters.length; i++) {
             input = input.replace(specialCharacters[i], " " + specialCharacters[i] + " ");
         }
-        while (input.contains("  ")) input = input.replace("  ", " "); // Replace two spaces by one
+
+        while (input.contains("  ")) input = input.replace("  ", " "); // Replace double spaces with single
         input = input.trim();
-        return input.split(" ");
+
+        String[] tokens = input.split(" ");
+        System.out.println("[DEBUG] Tokenized command: " + Arrays.toString(tokens));
+
+        return tokens;
     }
+
 
     public boolean saveCurrentDB() throws IOException {
         if (currentDB == null) {
