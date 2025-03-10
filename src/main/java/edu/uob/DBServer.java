@@ -13,7 +13,7 @@ import java.util.*;
 public class DBServer {
 
     private static final char END_OF_TRANSMISSION = 4;
-    //private static final char END_OF_TRANSMISSION = 4;
+    public static final String FILE_EXTENSION = ".tab";
     public String storageFolderPath;
     private String query;
     public static String currentDB;
@@ -119,7 +119,7 @@ public class DBServer {
         File[] tableFiles = new File(DBDirectory.getPath()).listFiles();
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
-                String tableName = tableFile.getName().replace(".tab", "");
+                String tableName = tableFile.getName().replace(FILE_EXTENSION, "");
                 Table table = Table.loadFromFile(DBDirectory.getPath(), tableName);
                 if (table != null) {
                     tables.put(tableName.toLowerCase(), table);

@@ -289,7 +289,8 @@ public class Table implements Serializable {
             case "<=":
                 return Double.parseDouble(rowValue) <= Double.parseDouble(conditionValue);
             case "LIKE":
-                return rowValue.contains(conditionValue); // Simple "contains" logic for LIKE
+                String regex = conditionValue.replace("%", ".*").replace("_", ".");
+                return rowValue.matches(regex);
             default:
                 return false;
         }
