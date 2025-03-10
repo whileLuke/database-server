@@ -27,11 +27,12 @@ public class Table implements Serializable {
 
     public List<List<String>> getRows() {
         // Return a deep copy to prevent external modification
-        List<List<String>> copy = new ArrayList<>();
-        for (List<String> row : rows) {
-            copy.add(new ArrayList<>(row));
-        }
-        return copy;
+        //List<List<String>> copy = new ArrayList<>();
+        //for (List<String> row : rows) {
+        //    copy.add(new ArrayList<>(row));
+        //}
+        //return copy;
+        return rows;
     }
 
     public int getColumnIndex(String columnName) {

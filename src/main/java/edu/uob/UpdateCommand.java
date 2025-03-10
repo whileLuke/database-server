@@ -24,9 +24,11 @@ public class UpdateCommand extends DBCommand {
             return "[ERROR] The number of columns do not match the number of values.";
         }
         TableQuery tableQuery = new TableQuery(table);
-        int updatedRows = tableQuery.updateRowsWithConditions(columnNames, values, conditions);
+        int updatedRows = tableQuery.updateRowsWithConditions(columnNames, values, conditions, server);
         if (updatedRows > 0) {
             if (saveCurrentDB()) {
+                System.out.println("[DEBUG] saved " + server.saveCurrentDB());
+                loadTables(currentDB);
                 return "[OK] " + updatedRows + " row(s) updated.";
             } else {
                 return "[ERROR] Failed to save updated table to disk.";

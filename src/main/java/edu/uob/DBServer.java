@@ -23,7 +23,7 @@ public class DBServer {
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
-        server.blockingListenOn(8888);
+        server.blockingListenOn(8887);
     }
 
     /**
@@ -96,12 +96,27 @@ public class DBServer {
     }
 
     public boolean saveCurrentDB() throws IOException {
-        if (currentDB == null) return false;
-        File DBDirectory = new File(storageFolderPath, currentDB);
-        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) return false;
-        for (Map.Entry<String, Table> entry : tables.entrySet()) {
-            TableStorage.saveToFile(entry.getValue(), DBDirectory.getPath());
+        if (currentDB == null) {
+            System.out.println("[ERROR] No database selected!");
+            return false;
         }
+        File DBDirectory = new File(storageFolderPath, currentDB);
+        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) {
+            System.out.println("[ERROR] Could not create database directory!");
+            return false;
+        }
+        System.out.println("[DEBUG] Saving tables to disk...");
+        for (Map.Entry<String, Table> entry : tables.entrySet()) {
+            System.out.println("📂 [DEBUG] Saving table: " + entry.getKey());
+            boolean success = TableStorage.saveToFile(entry.getValue(), DBDirectory.getPath());
+            if (!success) {
+                System.out.println("[ERROR] Failed to save table: " + entry.getKey());
+                return false;
+            }
+            File tableFile = new File(DBDirectory, entry.getKey() + ".tab");
+            System.out.println("[DEBUG] Saved file contents: " + new String(Files.readAllBytes(tableFile.toPath())));
+        }
+        System.out.println("[SUCCESS] Database saved!");
         return true;
     }
 

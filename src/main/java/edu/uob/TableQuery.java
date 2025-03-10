@@ -101,8 +101,13 @@ public class TableQuery {
     }
 
     public int updateRowsWithConditions(List<String> columnsToUpdate, List<String> newValues,
-                                        List<String> conditions) throws Exception {
+                                        List<String> conditions, DBServer server) throws Exception {
+        System.out.println("🔍 [DEBUG] ColumnsToUpdate: " + columnsToUpdate);
+        System.out.println("🔍 [DEBUG] NewValues: " + newValues);
+        System.out.println("🔍 [DEBUG] Conditions: " + conditions);
+
         if (columnsToUpdate.size() != newValues.size()) {
+            System.out.println("[ERROR] Mismatched column and value count!");
             return 0;
         }
 
@@ -110,18 +115,36 @@ public class TableQuery {
         for (String columnName : columnsToUpdate) {
             int index = table.getColumnIndex(columnName);
             if (index == -1) {
+                System.out.println("[ERROR] Column '" + columnName + "' not found!");
                 return 0;
             }
             updateIndexes.add(index);
         }
 
+        System.out.println("[DEBUG] Table BEFORE update: " + table.getRows());
+
         int updateCount = 0;
         for (List<String> row : table.getRows()) {
-            if (evaluator.isRowMatchConditions(row, conditions, table.getColumns())) {
+            boolean matches = evaluator.isRowMatchConditions(row, conditions, table.getColumns());
+            System.out.println("[DEBUG] Checking row: " + row + " -> Matches Condition: " + matches);
+
+            if (matches) {
                 for (int i = 0; i < updateIndexes.size(); i++) {
+                    System.out.println("[DEBUG] Updating row from: " + row);
                     row.set(updateIndexes.get(i), newValues.get(i));
+                    System.out.println("[DEBUG] Updated row to: " + row);
                 }
                 updateCount++;
+            }
+        }
+
+        System.out.println("[DEBUG] Table AFTER update: " + table.getRows());
+
+        if (updateCount > 0) {
+            boolean saved = server.saveCurrentDB();
+            if (!saved) {
+                System.out.println("[ERROR] Failed to save table!");
+                return 0;
             }
         }
 
