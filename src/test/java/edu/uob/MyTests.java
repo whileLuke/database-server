@@ -75,7 +75,23 @@ public class MyTests {
         server.handleCommand("CREATE TABLE marks (name, mark, pass);");
         server.handleCommand("INSERT INTO marks VALUES ('Simon', 65, TRUE);");
         server.handleCommand("INSERT INTO marks VALUES ('Sion', 55, TRUE);");
+        server.handleCommand("INSERT INTO marks VALUES ('Rob', 35, FALSE);");
         server.handleCommand("INSERT INTO marks VALUES ('Chris', 38, FALSE);");
+
+        String alterAddResponse = server.handleCommand("ALTER TABLE marks ADD age;");
+        assertTrue(alterAddResponse.contains("[OK]"));
+
+        String updateAgeResponse = server.handleCommand("UPDATE marks SET age = 35 WHERE name == 'Simon';");
+        assertTrue(updateAgeResponse.contains("[OK]"));
+
+        String verifyUpdate = server.handleCommand("SELECT * FROM marks WHERE name == 'Chris';");
+        assertTrue(verifyUpdate.contains("4\tChris\t38\tFALSE"));
+
+        String deleteResponse = server.handleCommand("DELETE FROM marks WHERE name == 'Sion';");
+        assertTrue(deleteResponse.contains("[OK]"));
+
+        String verifyDelete = server.handleCommand("SELECT * FROM marks;");
+        assertFalse(verifyDelete.contains("Sion"));
 
         // Test SELECT with LIKE
         String likeResponse = server.handleCommand("SELECT * FROM marks WHERE name LIKE 'i';");
@@ -83,10 +99,13 @@ public class MyTests {
         assertTrue(likeResponse.contains("4\tChris\t38\tFALSE"));
         assertFalse(likeResponse.contains("2\tSion\t55\tTRUE"));
 
+        String selectMultiResponse = server.handleCommand("SELECT * FROM marks WHERE (pass == FALSE) AND (mark > 35);");
+        assertTrue(selectMultiResponse.contains("4\tChris\t38\tFALSE"));
         // Test SELECT single column
         String selectIdResponse = server.handleCommand("SELECT id FROM marks WHERE pass == FALSE;");
         assertTrue(selectIdResponse.contains("id"));
         assertTrue(selectIdResponse.contains("3")); // Assuming id 3 and 4 correspond to failed entries
+        assertTrue(selectIdResponse.contains("4"));
 
         String selectNameResponse = server.handleCommand("SELECT name FROM marks WHERE mark>60;");
         assertTrue(selectNameResponse.contains("name"));

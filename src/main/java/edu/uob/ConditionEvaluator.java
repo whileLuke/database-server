@@ -12,9 +12,9 @@ public class ConditionEvaluator {
                 throw new Exception("Invalid condition format: " + condition);
             }
 
-            String columnName = parts.getColumnName();
-            String operator = parts.getOperator();
-            String value = parts.getValue();
+            String columnName = parts.columnName();
+            String operator = parts.operator();
+            String value = parts.value();
 
             int columnIndex = columns.indexOf(columnName);
             if (columnIndex == -1) {
@@ -82,35 +82,12 @@ public class ConditionEvaluator {
                     return false;
                 }
             case "LIKE":
-                String regex = conditionValue.replace("%", ".*").replace("_", ".");
-                return rowValue.matches(regex);
+                return rowValue.contains(conditionValue);
             default:
                 return false;
         }
     }
 
     // Helper class to store parsed condition parts
-    private static class ConditionParts {
-        private final String columnName;
-        private final String operator;
-        private final String value;
-
-        public ConditionParts(String columnName, String operator, String value) {
-            this.columnName = columnName;
-            this.operator = operator;
-            this.value = value;
-        }
-
-        public String getColumnName() {
-            return columnName;
-        }
-
-        public String getOperator() {
-            return operator;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
+        private record ConditionParts(String columnName, String operator, String value) {}
 }
