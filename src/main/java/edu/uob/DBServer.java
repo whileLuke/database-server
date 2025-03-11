@@ -18,7 +18,7 @@ public class DBServer {
     private String query;
     public static String currentDB;
     public static Map<String, Table> tables = new HashMap<String, Table>();
-    String[] specialCharacters = {"(",")",",",";",">=","<=","==","!="/*,">","<","="*/};
+    String[] specialCharacters = {"(",")",",",";","!",">","<","="};
     ArrayList<String> tokens = new ArrayList<String>();
 
     public static void main(String args[]) throws Exception {
@@ -38,8 +38,7 @@ public class DBServer {
             System.out.println("Can't seem to create database storage folder " + storageFolderPath);
         }
     }
-    //MAKE A COMMANDPARSER
-    //COMPILER
+
     /**
     * KEEP this signature (i.e. {@code edu.uob.DBServer.handleCommand(String)}) otherwise we won't be
     * able to mark your submission correctly.
@@ -48,24 +47,8 @@ public class DBServer {
     */
     public String handleCommand(String command) throws IOException, Exception {
         // TODO implement your server logic here
-        if (command == null || command.isEmpty()) {
-            return "[ERROR] Empty command.";
-        }
-
-        if (!command.endsWith(";")) {
-            return "[ERROR] Command must end with a semicolon (';').";
-        }
-        /*command = command.trim().substring(0, command.length() - 1); // Remove trailing semicolon
-    tokens = new ArrayList<>(List.of(tokenise(command)));       // Tokenize the input command
-
-    // Parse command and execute
-    DBCommand parsedCommand = new CommandParser().parseCommand(tokens); // Parse the tokens
-    if (parsedCommand == null) {
-        return "[ERROR] Failed to parse command.";
-    }
-
-    return parsedCommand.query(this);
-*/
+        if (command == null || command.isEmpty()) return "[ERROR] Empty command.";
+        if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (';').";
         tokens.clear();
         query = command;
         setupQuery();
@@ -83,44 +66,41 @@ public class DBServer {
                 tokens.addAll(Arrays.asList(nextBatchOfTokens));
             }
         }
-        for (int i=0; i<tokens.size(); i++) System.out.println(tokens.get(i));
+        for (String token : tokens) System.out.println(token);
     }
 
     String[] tokenise(String input) {
         System.out.println("[DEBUG] Raw input before tokenization: " + input);
-
-        for (int i = 0; i < specialCharacters.length; i++) {
-            input = input.replace(specialCharacters[i], " " + specialCharacters[i] + " ");
+        for (String specialCharacter : specialCharacters) {
+            input = input.replace(specialCharacter, " " + specialCharacter + " ");
         }
-
         while (input.contains("  ")) input = input.replace("  ", " "); // Replace double spaces with single
         input = input.trim();
-
-        String[] tokens = input.split(" ");
-        System.out.println("[DEBUG] Tokenized command: " + Arrays.toString(tokens));
-
-        return tokens;
+        String[] initialTokens = input.split(" ");
+        ArrayList<String> tokensList = tokeniseCompoundOperators(initialTokens);
+        return tokensList.toArray(new String[0]);
     }
 
+    private static ArrayList<String> tokeniseCompoundOperators(String[] initialTokens) {
+        ArrayList<String> tokensList = new ArrayList<>();
+        for (int i = 0; i < initialTokens.length; i++) {
+            if (i < initialTokens.length - 1 &&
+                    (initialTokens[i].equals(">") || initialTokens[i].equals("<") || initialTokens[i].equals("=") || initialTokens[i].equals("!")) &&
+                    initialTokens[i+1].equals("=")) {
+                tokensList.add(initialTokens[i] + initialTokens[i+1]);
+                i++;
+            } else tokensList.add(initialTokens[i]);
+        }
+        return tokensList;
+    }
 
     public boolean saveCurrentDB() throws IOException {
-        if (currentDB == null) {
-            System.out.println("[ERROR] No database selected!");
-            return false;
-        }
+        if (currentDB == null) return false;
         File DBDirectory = new File(storageFolderPath, currentDB);
-        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) {
-            System.out.println("[ERROR] Could not create database directory!");
-            return false;
-        }
-        System.out.println("[DEBUG] Saving tables to disk...");
+        if (!DBDirectory.exists() && !DBDirectory.mkdirs()) return false;
         for (Map.Entry<String, Table> entry : tables.entrySet()) {
-            System.out.println("📂 [DEBUG] Saving table: " + entry.getKey());
             boolean success = TableStorage.saveToFile(entry.getValue(), DBDirectory.getPath());
-            if (!success) {
-                System.out.println("[ERROR] Failed to save table: " + entry.getKey());
-                return false;
-            }
+            if (!success) return false;
             File tableFile = new File(DBDirectory, entry.getKey() + ".tab");
             System.out.println("[DEBUG] Saved file contents: " + new String(Files.readAllBytes(tableFile.toPath())));
         }
@@ -132,13 +112,6 @@ public class DBServer {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         tables.clear();
-        /*for (File tableFile : Objects.requireNonNull(DBDirectory.listFiles((dir, name) -> name.endsWith(".tab")))) {
-            String tableName = tableFile.getName().replace(".tab", "");
-            Table table = Table.loadFromFile(DBDirectory.getPath(), tableName);
-            if (table != null) {
-                tables.put(tableName.toLowerCase(), table); // Add table to memory
-            }
-        }*/
         File[] tableFiles = new File(DBDirectory.getPath()).listFiles();
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
@@ -153,60 +126,17 @@ public class DBServer {
         return true;
     }
 
-    //protected boool?
     protected boolean useDatabase(String DBName) throws IOException {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         return loadTables(DBName.toLowerCase());
     }
 
-  /*  protected boolean createTable(String tableName, List<String> columnNames) throws IOException {
-        System.out.println("Creating table " + tableName + "TEST");
-        System.out.println(currentDB);
-        if (currentDB == null) {
-            System.out.println("[ERROR] No database selected.");
-            return false;
-        }
-        /*System.out.println("Creating table " + tableName + "TEST2");
-        File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
-        if (tableFile.exists()) {
-            System.out.println("[ERROR] Table already exists.");
-            return false;
-        }
-        System.out.println("Creating table " + tableName + "TEST3");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableFile))) {
-            writer.write("id");
-            for (String column : columnNames) {
-                System.out.println("Creating table " + tableName + "TEST11");
-                writer.write("\t" + column);
-            }
-            writer.newLine();
-            Table newTable = new Table(columnNames);
-            tables.put(tableName.toLowerCase(), newTable);
-            System.out.println("[OK] Table '" + tableName + "' created.");
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        if (tables.containsKey(tableName.toLowerCase())) {
-            return false;
-        }
-        if (!columnNames.contains("id")) {
-            columnNames.add(0, "id");
-        }
-        tables.put(tableName.toLowerCase(), new Table(columnNames));
-        saveCurrentDB();
-        return true;
-    }
-*/
     protected boolean createDatabase(String DBName) {
         if (DBName == null) return false;
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (DBDirectory.exists()) return false;
         return DBDirectory.mkdirs();
-        //write it to disk
-        //return true;
     }
 
     public boolean deleteDatabase(String DBName) {

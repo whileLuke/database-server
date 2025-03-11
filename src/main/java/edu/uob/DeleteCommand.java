@@ -23,7 +23,11 @@ public class DeleteCommand extends DBCommand {
             return "[ERROR] Table '" + tableName + "' does not exist.";
         }
 
-        if (conditions.isEmpty()) {
+        // Debug the conditions list to see what's happening
+        System.out.println("[DEBUG] Delete command conditions: " + conditions);
+
+        // Fix: Check if conditions list is actually empty, not just appears empty
+        if (conditions.isEmpty() || (conditions.size() == 1 && conditions.get(0).trim().isEmpty())) {
             return "[ERROR] DELETE command requires a WHERE condition.";
         }
 
@@ -32,7 +36,10 @@ public class DeleteCommand extends DBCommand {
             List<String> columns = table.getColumns();
 
             // Create condition parser with tokenized conditions
-            ConditionParser parser = new ConditionParser(tokenizeConditions(conditions));
+            List<String> tokens = tokenizeConditions(conditions);
+            System.out.println("[DEBUG] Tokenized conditions: " + tokens);
+
+            ConditionParser parser = new ConditionParser(tokens);
             ConditionNode conditionTree = parser.parse();
 
             int initialRowCount = rows.size();
@@ -41,7 +48,10 @@ public class DeleteCommand extends DBCommand {
             // Delete rows that match the condition
             while (iterator.hasNext()) {
                 List<String> row = iterator.next();
-                if (conditionTree.evaluate(row, columns)) {
+                boolean matches = conditionTree.evaluate(row, columns);
+                System.out.println("[DEBUG] Row: " + row + " matches condition: " + matches);
+
+                if (matches) {
                     iterator.remove();
                 }
             }
@@ -55,6 +65,7 @@ public class DeleteCommand extends DBCommand {
                 return "[ERROR] No rows matched the delete condition.";
             }
         } catch (Exception e) {
+            e.printStackTrace(); // Add stack trace for debugging
             return "[ERROR] Failed to process delete operation: " + e.getMessage();
         }
     }

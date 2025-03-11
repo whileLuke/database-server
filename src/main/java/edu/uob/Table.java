@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Table implements Serializable {
-    private static final long serialVersionUID = 1L;
+    //private static final long serialVersionUID = 1L;
     private final List<String> columns;
     private final List<List<String>> rows;
     private final String name;
@@ -17,23 +17,11 @@ public class Table implements Serializable {
         this.rows = new ArrayList<>();
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
 
-    public List<String> getColumns() {
-        return new ArrayList<>(columns);  // Return a defensive copy
-    }
+    public List<String> getColumns() { return new ArrayList<>(columns); }
 
-    public List<List<String>> getRows() {
-        // Return a deep copy to prevent external modification
-        //List<List<String>> copy = new ArrayList<>();
-        //for (List<String> row : rows) {
-        //    copy.add(new ArrayList<>(row));
-        //}
-        //return copy;
-        return rows;
-    }
+    public List<List<String>> getRows() { return rows; }
 
     public int getColumnIndex(String columnName) {
         return columns.indexOf(columnName);
@@ -47,7 +35,7 @@ public class Table implements Serializable {
         if (row.size() != columns.size()) {
             return false;
         }
-        rows.add(new ArrayList<>(row));  // Add a copy to prevent external modification
+        rows.add(new ArrayList<>(row));
         return true;
     }
 

@@ -37,14 +37,23 @@ public class UpdateCommand extends DBCommand {
             List<List<String>> rows = table.getRows();
             List<String> columns = table.getColumns();
 
+            // Debug to verify conditions aren't empty
+            System.out.println("[DEBUG] Conditions in UpdateCommand: " + conditions);
+
             if (!conditions.isEmpty()) {
                 // Create condition parser with tokenized conditions
-                ConditionParser parser = new ConditionParser(tokenizeConditions(conditions));
+                List<String> tokens = tokenizeConditions(conditions);
+                System.out.println("[DEBUG] Tokenized conditions: " + tokens);
+
+                ConditionParser parser = new ConditionParser(tokens);
                 ConditionNode conditionTree = parser.parse();
 
                 // Update rows that match the condition
                 for (List<String> row : rows) {
-                    if (conditionTree.evaluate(row, columns)) {
+                    boolean matches = conditionTree.evaluate(row, columns);
+                    System.out.println("[DEBUG] Row: " + row + " matches condition: " + matches);
+
+                    if (matches) {
                         updateRow(row, columns, columnNames, processedValues);
                         updatedRows++;
                     }
@@ -64,6 +73,7 @@ public class UpdateCommand extends DBCommand {
                 return "[ERROR] No rows matched the update condition.";
             }
         } catch (Exception e) {
+            e.printStackTrace(); // Add this to get full stack trace
             return "[ERROR] Failed to process update: " + e.getMessage();
         }
     }
