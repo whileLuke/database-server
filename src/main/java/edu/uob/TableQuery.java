@@ -108,14 +108,14 @@ public class TableQuery {
     }
 
     private boolean evaluateCondition(String left, String operator, String right) {
-        switch (operator) {
-            case "=": return left.equals(right);
-            case ">": return left.compareTo(right) > 0;
-            case "<": return left.compareTo(right) < 0;
-            case ">=": return left.compareTo(right) >= 0;
-            case "<=": return left.compareTo(right) <= 0;
-            case "!=": return !left.equals(right);
-            default: return false;
-        }
+        return switch (operator) {
+            case "=" -> left.equals(right);
+            case ">" -> left.compareTo(right) > 0;
+            case "<" -> left.compareTo(right) < 0;
+            case ">=" -> left.compareTo(right) >= 0;
+            case "<=" -> left.compareTo(right) <= 0;
+            case "!=" -> !left.equals(right);
+            default -> false;
+        };
     }
 }

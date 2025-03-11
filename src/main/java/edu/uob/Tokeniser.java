@@ -9,40 +9,28 @@ public class Tokeniser {
 
     public List<String> tokenise(String input) {
         List<String> tokens = new ArrayList<>();
-        String[] fragments = input.split("'");
+        String[] parts = input.split("'");
 
-        for (int i = 0; i < fragments.length; i++) {
-            if (i % 2 != 0) {
-                // This is inside quotes - keep as a single token
-                tokens.add("'" + fragments[i] + "'");
-            } else {
-                // This is outside quotes - tokenize normally
-                String[] nextBatchOfTokens = tokeniseFragment(fragments[i]);
+        for (int i = 0; i < parts.length; i++) {
+            if (i % 2 != 0) tokens.add("'" + parts[i] + "'");
+            else {
+                String[] nextBatchOfTokens = tokenisePart(parts[i]);
                 tokens.addAll(Arrays.asList(nextBatchOfTokens));
             }
         }
         return tokens;
     }
 
-    private String[] tokeniseFragment(String input) {
-        for (String specialCharacter : SPECIAL_CHARACTERS) {
-            input = input.replace(specialCharacter, " " + specialCharacter + " ");
-        }
+    private String[] tokenisePart(String input) {
+        for (String specialCharacter : SPECIAL_CHARACTERS) input = input.replace(specialCharacter, " " + specialCharacter + " ");
 
-        // Replace multiple spaces with a single space
-        while (input.contains("  ")) {
-            input = input.replace("  ", " ");
-        }
+        while (input.contains("  ")) input = input.replace("  ", " ");
 
         input = input.trim();
-        if (input.isEmpty()) {
-            return new String[0];
-        }
+        if (input.isEmpty()) return new String[0];
 
-        // Split by spaces
         String[] initialTokens = input.split(" ");
 
-        // Process compound operators like >=, <=, !=, ==
         return tokeniseCompoundOperators(initialTokens).toArray(new String[0]);
     }
 
@@ -50,19 +38,17 @@ public class Tokeniser {
         List<String> tokensList = new ArrayList<>();
 
         for (int i = 0; i < initialTokens.length; i++) {
-            // Check for compound operators
             if (i < initialTokens.length - 1 &&
                     (initialTokens[i].equals(">") || initialTokens[i].equals("<") ||
                             initialTokens[i].equals("=") || initialTokens[i].equals("!")) &&
                     initialTokens[i+1].equals("=")) {
 
                 tokensList.add(initialTokens[i] + initialTokens[i+1]);
-                i++; // Skip the next token as we've combined it
+                i++;
             } else {
                 tokensList.add(initialTokens[i]);
             }
         }
-
         return tokensList;
     }
 }

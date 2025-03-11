@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Table implements Serializable {
+public class Table /*implements Serializable*/ {
     private final List<String> columns;
     private final List<List<String>> rows;
     private final String name;
