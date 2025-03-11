@@ -141,7 +141,11 @@ public class CommandParser extends DBServer {
             boolean inQuotes = false;
 
             for (int i = startId + 1; i < tokens.size(); i++) {
-                String token = tokens.get(i).replace(";", ""); // Remove semicolon
+                String token = tokens.get(i);
+                // Remove semicolon only if it's at the end
+                if (i == tokens.size() - 1 && token.endsWith(";")) {
+                    token = token.substring(0, token.length() - 1);
+                }
 
                 // Check for quotes to preserve them in conditions
                 if (token.startsWith("\"") && !token.endsWith("\"") || token.startsWith("'") && !token.endsWith("'")) {
@@ -169,11 +173,13 @@ public class CommandParser extends DBServer {
 
             if (cmd instanceof SelectCommand) {
                 ((SelectCommand) cmd).setConditions(conditions);
+            } else if (cmd instanceof UpdateCommand) {
+                ((UpdateCommand) cmd).setConditions(conditions);
+            } else if (cmd instanceof DeleteCommand) {
+                ((DeleteCommand) cmd).setConditions(conditions);
             }
         }
     }
-
-
 
     private DBCommand parseUpdate() {
         if (tokens.size() < 7 || !tokens.get(2).equalsIgnoreCase("SET")) return null;

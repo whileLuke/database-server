@@ -77,7 +77,7 @@ class LogicalCondition extends ConditionNode {
 
     @Override
     boolean evaluate(List<String> row, List<String> columns) {
-        return switch (operator) {
+        return switch (operator.toUpperCase()) {
             case "AND" -> left.evaluate(row, columns) && right.evaluate(row, columns);
             case "OR" -> left.evaluate(row, columns) || right.evaluate(row, columns);
             default -> false;
