@@ -11,9 +11,7 @@ public class ConditionParser {
     }
 
     public ConditionNode parse() {
-        if (tokens.isEmpty()) {
-            return null;
-        }
+        if (tokens.isEmpty()) return null;
         return parseExpression();
     }
 
