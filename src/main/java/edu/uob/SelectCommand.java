@@ -5,28 +5,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SelectCommand extends DBCommand {
-    private List<String> conditions = new ArrayList<>();
-
-    public void setConditions(List<String> conditions) {
-        this.conditions = conditions;
-    }
-
     @Override
-    public String query(DBServer server) throws IOException {
-        if (currentDB == null) {
-            return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database is selected
+        DBResponse validationResponse = validateDatabaseSelected();
+        if (validationResponse != null) return validationResponse;
 
-        if (tableNames.isEmpty()) {
-            return "[ERROR] Table name missing in SELECT query.";
-        }
+        // Validate table name is provided
+        validationResponse = validateTableNameProvided();
+        if (validationResponse != null) return validationResponse;
 
         String tableName = tableNames.get(0).toLowerCase();
-        Table table = tables.get(tableName);
 
-        if (table == null) {
-            return "[ERROR] Table '" + tableName + "' does not exist.";
-        }
+        // Validate table exists
+        validationResponse = validateTableExists(tableName);
+        if (validationResponse != null) return validationResponse;
+
+        Table table = getTable(tableName);
 
         // Determine which columns to select
         List<String> selectedColumns;
@@ -37,7 +32,7 @@ public class SelectCommand extends DBCommand {
             // Validate columns
             for (String column : selectedColumns) {
                 if (!table.getColumns().contains(column)) {
-                    return "[ERROR] Column '" + column + "' does not exist in table '" + tableName + "'.";
+                    return DBResponse.error("Column '" + column + "' does not exist in table '" + tableName + "'.");
                 }
             }
         }
@@ -60,14 +55,15 @@ public class SelectCommand extends DBCommand {
                 filteredRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
             }
         } catch (Exception e) {
-            return "[ERROR] Failed to process SELECT query: " + e.getMessage();
+            return DBResponse.error("Failed to process SELECT query: " + e.getMessage());
         }
 
+        String formattedRows = formatRows(selectedColumns, filteredRows);
         if (filteredRows.isEmpty()) {
-            return "[OK] No matching rows.";
+            return DBResponse.success("No matching rows.");
         }
 
-        return "[OK]\n" + formatRows(selectedColumns, filteredRows);
+        return DBResponse.success("Query executed successfully.", formattedRows);
     }
 
     private void extractSelectedData(Table table, List<List<String>> filteredRows, List<Integer> columnIndexes) {

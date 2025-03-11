@@ -5,39 +5,43 @@ import java.io.IOException;
 
 public class DropCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
+    public DBResponse query() throws IOException {
         // Handle DROP TABLE
         if (!tableNames.isEmpty()) {
-            if (currentDB == null) {
-                return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-            }
+            // Validate database is selected
+            DBResponse validationResponse = validateDatabaseSelected();
+            if (validationResponse != null) return validationResponse;
 
             String tableName = tableNames.get(0).toLowerCase();
 
-            if (!tables.containsKey(tableName)) {
-                return "[ERROR] Table '" + tableName + "' does not exist in the current database.";
-            }
+            // Validate table exists
+            validationResponse = validateTableExists(tableName);
+            if (validationResponse != null) return validationResponse;
 
             // Remove table file
-            File tableFile = new File(server.storageFolderPath + File.separator + currentDB, tableName + ".tab");
+            File tableFile = new File(server.getStorageFolderPath() + File.separator + currentDB, tableName + ".tab");
             if (tableFile.delete()) {
                 tables.remove(tableName);
                 saveCurrentDB();
-                return "[OK] Dropped table '" + tableName + "'.";
+                return DBResponse.success("Dropped table '" + tableName + "'.");
             } else {
-                return "[ERROR] Failed to delete the table file for '" + tableName + "'.";
+                return DBResponse.error("Failed to delete the table file for '" + tableName + "'.");
             }
         }
         // Handle DROP DATABASE
         else if (DBName != null) {
+            // Validate database name
+            DBResponse validationResponse = CommandValidator.validateDatabaseNameProvided(DBName);
+            if (validationResponse != null) return validationResponse;
+
             if (server.deleteDatabase(DBName)) {
-                return "[OK] Dropped database '" + DBName + "'.";
+                return DBResponse.success("Dropped database '" + DBName + "'.");
             } else {
-                return "[ERROR] Database '" + DBName + "' does not exist.";
+                return DBResponse.error("Database '" + DBName + "' does not exist.");
             }
         }
         else {
-            return "[ERROR] No table or database specified to drop.";
+            return DBResponse.error("No table or database specified to drop.");
         }
     }
 }

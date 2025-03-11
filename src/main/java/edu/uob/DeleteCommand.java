@@ -6,31 +6,26 @@ import java.util.Iterator;
 import java.util.List;
 
 public class DeleteCommand extends DBCommand {
-    private List<String> conditions = new ArrayList<>();
-
-    public void setConditions(List<String> conditions) {
-        this.conditions = conditions;
-    }
-
     @Override
-    public String query(DBServer server) throws IOException {
-        if (currentDB == null) {
-            return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database is selected
+        DBResponse validationResponse = validateDatabaseSelected();
+        if (validationResponse != null) return validationResponse;
 
-        if (tableNames.isEmpty()) {
-            return "[ERROR] No table specified for deletion.";
-        }
+        // Validate table name is provided
+        validationResponse = validateTableNameProvided();
+        if (validationResponse != null) return validationResponse;
 
         String tableName = tableNames.get(0).toLowerCase();
-        Table table = tables.get(tableName);
 
-        if (table == null) {
-            return "[ERROR] Table '" + tableName + "' does not exist.";
-        }
+        // Validate table exists
+        validationResponse = validateTableExists(tableName);
+        if (validationResponse != null) return validationResponse;
+
+        Table table = getTable(tableName);
 
         if (conditions.isEmpty()) {
-            return "[ERROR] DELETE command requires a WHERE condition.";
+            return DBResponse.error("DELETE command requires a WHERE condition.");
         }
 
         try {
@@ -59,15 +54,15 @@ public class DeleteCommand extends DBCommand {
 
             if (deletedRows > 0) {
                 if (saveCurrentDB()) {
-                    return "[OK] " + deletedRows + " row(s) deleted.";
+                    return DBResponse.success(deletedRows + " row(s) deleted.");
                 } else {
-                    return "[ERROR] Failed to save database after deletion.";
+                    return DBResponse.error("Failed to save database after deletion.");
                 }
             } else {
-                return "[ERROR] No rows matched the delete condition.";
+                return DBResponse.error("No rows matched the delete condition.");
             }
         } catch (Exception e) {
-            return "[ERROR] Failed to process delete operation: " + e.getMessage();
+            return DBResponse.error("Failed to process delete operation: " + e.getMessage());
         }
     }
 

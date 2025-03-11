@@ -28,7 +28,7 @@ public abstract class DBCommand {
         this.conditions = conditions;
     }
 
-    public abstract DBResponse execute() throws IOException;
+    public abstract DBResponse query() throws IOException;
 
     // Common utility methods
 

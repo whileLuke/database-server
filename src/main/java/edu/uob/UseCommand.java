@@ -4,17 +4,15 @@ import java.io.IOException;
 
 public class UseCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
-        if (DBName == null || DBName.isEmpty()) {
-            return "[ERROR] No database name specified.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database name is provided
+        DBResponse validationResponse = CommandValidator.validateDatabaseNameProvided(DBName);
+        if (validationResponse != null) return validationResponse;
 
         if (server.useDatabase(DBName)) {
-            currentDB = server.getCurrentDB();
-            tables = server.getTables();
-            return "[OK] Switched to database " + DBName + ".";
+            return DBResponse.success("Using database '" + DBName + "'.");
         } else {
-            return "[ERROR] Database " + DBName + " does not exist.";
+            return DBResponse.error("Database '" + DBName + "' does not exist.");
         }
     }
 }

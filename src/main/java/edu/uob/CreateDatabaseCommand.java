@@ -4,15 +4,15 @@ import java.io.IOException;
 
 public class CreateDatabaseCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
-        if (DBName == null || DBName.isEmpty()) {
-            return "[ERROR] No database name specified.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database name is provided
+        DBResponse validationResponse = CommandValidator.validateDatabaseNameProvided(DBName);
+        if (validationResponse != null) return validationResponse;
 
         if (server.createDatabase(DBName)) {
-            return "[OK] Database '" + DBName + "' created.";
+            return DBResponse.success("Database '" + DBName + "' created.");
         } else {
-            return "[ERROR] Failed to create database '" + DBName + "'. It may already exist.";
+            return DBResponse.error("Failed to create database '" + DBName + "'. It may already exist.");
         }
     }
 }

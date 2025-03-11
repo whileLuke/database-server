@@ -32,7 +32,7 @@ public class CommandParser {
         }
         if(cmd == null) return DBResponse.error(firstToken + " command formatted incorrectly.");
         cmd.setServer(server);  // Pass the server to the command
-        return cmd.execute();
+        return cmd.query();
     }
 
     private boolean endsWithSemicolon() { return tokens.get(tokens.size() - 1).equals(";"); }

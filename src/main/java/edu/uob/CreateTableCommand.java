@@ -4,20 +4,20 @@ import java.io.IOException;
 
 public class CreateTableCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
-        if (currentDB == null) {
-            return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database is selected
+        DBResponse validationResponse = validateDatabaseSelected();
+        if (validationResponse != null) return validationResponse;
 
-        if (tableNames.isEmpty()) {
-            return "[ERROR] No table name specified.";
-        }
+        // Validate table name is provided
+        validationResponse = validateTableNameProvided();
+        if (validationResponse != null) return validationResponse;
 
         String tableName = tableNames.get(0).toLowerCase();
 
         // Check if table already exists
         /*if (tables.containsKey(tableName)) {
-            return "[ERROR] Table '" + tableName + "' already exists.";
+            return DBResponse.error("Table '" + tableName + "' already exists.");
         }*/
 
         // Create table with specified columns
@@ -25,9 +25,9 @@ public class CreateTableCommand extends DBCommand {
         tables.put(tableName, newTable);
 
         if (saveCurrentDB()) {
-            return "[OK] Table '" + tableName + "' created.";
+            return DBResponse.success("Table '" + tableName + "' created.");
         } else {
-            return "[ERROR] Failed to save the table to disk.";
+            return DBResponse.error("Failed to save the table to disk.");
         }
     }
 }

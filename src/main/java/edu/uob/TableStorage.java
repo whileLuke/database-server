@@ -8,6 +8,21 @@ import java.util.List;
 public class TableStorage {
     private static final String FILE_EXTENSION = ".tab";
 
+    /*public boolean backupTable(String dbName, String tableName) throws IOException {
+        Table table = loadFromFile(dbName, tableName);
+        if (table == null) return false;
+
+        File backupDir = new File(baseStoragePath, dbName + "/backups");
+        if (!backupDir.exists()) {
+            backupDir.mkdirs();
+        }
+
+        String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+        File backupFile = new File(backupDir, tableName + "_" + timestamp + ".tab");
+
+        return SaveToFile(table, backupFile);
+    }*/
+
     public static boolean saveToFile(Table table, String databasePath) {
         File tableFile = new File(databasePath, table.getName() + FILE_EXTENSION);
 

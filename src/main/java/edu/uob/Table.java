@@ -25,7 +25,7 @@ public class Table implements Serializable {
     public int getColumnIndex(String columnName) {
         return columns.indexOf(columnName);
     }
-    
+
     public boolean addRow(List<String> row) {
         if (row.size() != columns.size()) {
             return false;
@@ -74,6 +74,24 @@ public class Table implements Serializable {
             }
         }
         return maxID + 1;
+    }
+
+    public void addRowDirect(List<String> row) {
+        rows.add(new ArrayList<>(row));
+    }
+
+    // Add a method to find rows by column value
+    public List<List<String>> findRowsByColumnValue(String columnName, String value) {
+        int columnIndex = getColumnIndex(columnName);
+        if (columnIndex == -1) return new ArrayList<>();
+
+        List<List<String>> matchingRows = new ArrayList<>();
+        for (List<String> row : rows) {
+            if (row.get(columnIndex).equals(value)) {
+                matchingRows.add(row);
+            }
+        }
+        return matchingRows;
     }
 
     @Override

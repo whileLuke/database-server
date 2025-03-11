@@ -6,35 +6,41 @@ import java.util.List;
 
 public class JoinCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
-        if (currentDB == null) {
-            return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database is selected
+        DBResponse validationResponse = validateDatabaseSelected();
+        if (validationResponse != null) return validationResponse;
 
         if (tableNames.size() != 2) {
-            return "[ERROR] JOIN needs two table names.";
+            return DBResponse.error("JOIN needs two table names.");
         }
 
         String table1Name = tableNames.get(0).toLowerCase();
         String table2Name = tableNames.get(1).toLowerCase();
 
-        Table table1 = tables.get(table1Name);
-        Table table2 = tables.get(table2Name);
+        // Validate tables exist
+        validationResponse = validateTableExists(table1Name);
+        if (validationResponse != null) return validationResponse;
 
-        if (table1 == null || table2 == null) {
-            return "[ERROR] One or both tables do not exist.";
-        }
+        validationResponse = validateTableExists(table2Name);
+        if (validationResponse != null) return validationResponse;
+
+        Table table1 = getTable(table1Name);
+        Table table2 = getTable(table2Name);
 
         if (columnNames.size() != 2) {
-            return "[ERROR] JOIN requires exactly two column names.";
+            return DBResponse.error("JOIN requires exactly two column names.");
         }
 
         String column1 = columnNames.get(0);
         String column2 = columnNames.get(1);
 
-        if (!table1.getColumns().contains(column1) || !table2.getColumns().contains(column2)) {
-            return "[ERROR] Specified columns for JOIN not found in tables.";
-        }
+        // Validate columns exist in their respective tables
+        validationResponse = CommandValidator.validateColumnExists(table1, column1);
+        if (validationResponse != null) return validationResponse;
+
+        validationResponse = CommandValidator.validateColumnExists(table2, column2);
+        if (validationResponse != null) return validationResponse;
 
         TableQuery tableQuery = new TableQuery(table1);
         List<List<String>> joinResult = tableQuery.joinWith(table2, column1, column2);
@@ -52,21 +58,21 @@ public class JoinCommand extends DBCommand {
             }
         }
 
-        return formatResult(combinedColumnNames, joinResult);
+        String formattedResult = formatResult(combinedColumnNames, joinResult);
+        return DBResponse.success("Tables joined successfully.", formattedResult);
     }
 
     private String formatResult(List<String> columnNames, List<List<String>> rows) {
         StringBuilder result = new StringBuilder();
 
-        result.append("[OK]\n");
         result.append(String.join("\t", columnNames)).append("\n");
 
         if (rows.isEmpty()) {
-            result.append("[DEBUG] No matching rows to display.\n");
-        }
-
-        for (List<String> row : rows) {
-            result.append(String.join("\t", row)).append("\n");
+            result.append("[No matching rows to display]");
+        } else {
+            for (List<String> row : rows) {
+                result.append(String.join("\t", row)).append("\n");
+            }
         }
 
         return result.toString();

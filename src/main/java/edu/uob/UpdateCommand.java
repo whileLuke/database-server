@@ -5,99 +5,84 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UpdateCommand extends DBCommand {
-    private List<String> conditions = new ArrayList<>();
-
-    public void setConditions(List<String> conditions) {
-        this.conditions = conditions;
-    }
-
     @Override
-    public String query(DBServer server) throws IOException {
-        if (currentDB == null) {
-            return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-        }
+    public DBResponse query() throws IOException {
+        // Validate database is selected
+        DBResponse validationResponse = validateDatabaseSelected();
+        if (validationResponse != null) return validationResponse;
 
-        if (tableNames.isEmpty() || columnNames.isEmpty() || values.isEmpty()) {
-            return "[ERROR] Invalid UPDATE command format.";
-        }
+        // Validate table name is provided
+        validationResponse = validateTableNameProvided();
+        if (validationResponse != null) return validationResponse;
+
+        // Validate values are not empty
+        validationResponse = CommandValidator.validateValuesNotEmpty(values);
+        if (validationResponse != null) return validationResponse;
 
         String tableName = tableNames.get(0).toLowerCase();
-        Table table = tables.get(tableName);
 
-        if (table == null) {
-            return "[ERROR] Table '" + tableName + "' does not exist.";
+        // Validate table exists
+        validationResponse = validateTableExists(tableName);
+        if (validationResponse != null) return validationResponse;
+
+        Table table = getTable(tableName);
+
+        // Validate columns exist
+        for (String columnName : columnNames) {
+            validationResponse = CommandValidator.validateColumnExists(table, columnName);
+            if (validationResponse != null) return validationResponse;
+
+            // Check if trying to update ID column
+            validationResponse = CommandValidator.validateNotIdColumn(columnName);
+            if (validationResponse != null) return validationResponse;
         }
 
-        if (columnNames.size() != values.size()) {
-            return "[ERROR] The number of columns does not match the number of values.";
+        // Process values (remove quotes)
+        List<String> processedValues = processValues(values);
+
+        // If no conditions, return error
+        if (conditions.isEmpty()) {
+            return DBResponse.error("UPDATE command requires a WHERE condition for safety.");
         }
 
         try {
-            // Process values - remove quotes
-            List<String> processedValues = new ArrayList<>();
-            for (String value : values) {
-                processedValues.add(removeQuotes(value));
-            }
+            // Parse conditions
+            List<String> tokens = tokenizeConditions(conditions);
+            ConditionParser parser = new ConditionParser(tokens);
+            ConditionNode conditionTree = parser.parse();
 
-            // Validate columns
-            for (String column : columnNames) {
-                if (!table.getColumns().contains(column)) {
-                    return "[ERROR] Column '" + column + "' does not exist in table '" + tableName + "'.";
-                }
-                if (column.equals("id")) {
-                    return "[ERROR] Cannot update the ID column.";
-                }
-            }
-
-            int updatedRows = 0;
             List<List<String>> rows = table.getRows();
-            List<String> columns = table.getColumns();
+            List<String> tableColumns = table.getColumns();
+            int updatedRowCount = 0;
 
-            if (conditions.isEmpty()) {
-                // Update all rows if no condition specified
-                for (List<String> row : rows) {
-                    updateRow(row, columns, columnNames, processedValues);
-                    updatedRows++;
-                }
-            } else {
-                // Create condition parser with tokenized conditions
-                List<String> tokens = tokenizeConditions(conditions);
-                ConditionParser parser = new ConditionParser(tokens);
-                ConditionNode conditionTree = parser.parse();
+            // Update matching rows
+            for (List<String> row : rows) {
+                if (conditionTree.evaluate(row, tableColumns)) {
+                    // Update each specified column
+                    for (int i = 0; i < columnNames.size(); i++) {
+                        String columnName = columnNames.get(i);
+                        String newValue = processedValues.get(i);
+                        int columnIndex = table.getColumnIndex(columnName);
 
-                // Update rows that match the condition
-                for (List<String> row : rows) {
-                    boolean matches = conditionTree.evaluate(row, columns);
-                    if (matches) {
-                        updateRow(row, columns, columnNames, processedValues);
-                        updatedRows++;
+                        if (columnIndex >= 0) {
+                            row.set(columnIndex, newValue);
+                            updatedRowCount++;
+                        }
                     }
                 }
             }
 
-            if (updatedRows > 0) {
+            if (updatedRowCount > 0) {
                 if (saveCurrentDB()) {
-                    return "[OK] " + updatedRows + " row(s) updated.";
+                    return DBResponse.success(updatedRowCount + " row(s) updated.");
                 } else {
-                    return "[ERROR] Failed to save database after update.";
+                    return DBResponse.error("Failed to save database after update.");
                 }
             } else {
-                return "[ERROR] No rows matched the update condition.";
+                return DBResponse.error("No rows matched the update condition.");
             }
         } catch (Exception e) {
-            return "[ERROR] Failed to process update: " + e.getMessage();
-        }
-    }
-
-    private void updateRow(List<String> row, List<String> tableColumns,
-                           List<String> updateColumns, List<String> updateValues) {
-        for (int i = 0; i < updateColumns.size(); i++) {
-            String columnName = updateColumns.get(i);
-            int columnIndex = tableColumns.indexOf(columnName);
-
-            if (columnIndex >= 0 && columnIndex < row.size()) {
-                row.set(columnIndex, updateValues.get(i));
-            }
+            return DBResponse.error("Failed to process update operation: " + e.getMessage());
         }
     }
 
@@ -112,14 +97,5 @@ public class UpdateCommand extends DBCommand {
             }
         }
         return tokens;
-    }
-
-    private String removeQuotes(String value) {
-        if (value == null) return "";
-        if ((value.startsWith("'") && value.endsWith("'")) ||
-                (value.startsWith("\"") && value.endsWith("\""))) {
-            return value.substring(1, value.length() - 1);
-        }
-        return value;
     }
 }

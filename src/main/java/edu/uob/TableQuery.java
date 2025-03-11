@@ -93,42 +93,29 @@ public class TableQuery {
         return tokens;
     }
 
-    /*public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) {
-        List<List<String>> resultRows = new ArrayList<>();
-        List<List<String>> allRows = table.getRows();
-        List<String> tableColumns = table.getColumns();
+    public List<List<String>> selectRowsWhere(String columnName, String operator, String value) {
+        int columnIndex = table.getColumnIndex(columnName);
+        if (columnIndex == -1) return new ArrayList<>();
 
-        System.out.println("[DEBUG] selectRowsWithConditions called with columns: " + selectedColumns + ", conditions: " + conditions);
-
-        if (conditions.isEmpty()) {
-            System.out.println("[DEBUG] No conditions given, returning all rows.");
-            return allRows;
-        }
-
-        ConditionParser parser = new ConditionParser(conditions);
-        ConditionNode rootCondition = parser.parse();
-
-        if (rootCondition == null) {
-            System.out.println("[ERROR] Condition parsing failed! No valid condition tree was built.");
-            return new ArrayList<>();
-        }
-
-        // 🔍 Iterate through rows and evaluate conditions
-        for (List<String> row : allRows) {
-            System.out.println("[DEBUG] Checking row: " + row);
-
-            boolean matches = rootCondition.evaluate(row, tableColumns);
-            System.out.println("[DEBUG] Condition evaluation result for row " + row + " -> " + matches);
-
-            if (matches) {
-                System.out.println("[DEBUG] Row matches conditions! Adding: " + row);
-                resultRows.add(row);
-            } else {
-                System.out.println("[DEBUG] Row does NOT match conditions.");
+        List<List<String>> result = new ArrayList<>();
+        for (List<String> row : table.getRows()) {
+            String cellValue = row.get(columnIndex);
+            if (evaluateCondition(cellValue, operator, value)) {
+                result.add(new ArrayList<>(row));
             }
         }
+        return result;
+    }
 
-        System.out.println("[DEBUG] Matching rows found: " + resultRows.size());
-        return resultRows;
-    }*/
+    private boolean evaluateCondition(String left, String operator, String right) {
+        switch (operator) {
+            case "=": return left.equals(right);
+            case ">": return left.compareTo(right) > 0;
+            case "<": return left.compareTo(right) < 0;
+            case ">=": return left.compareTo(right) >= 0;
+            case "<=": return left.compareTo(right) <= 0;
+            case "!=": return !left.equals(right);
+            default: return false;
+        }
+    }
 }

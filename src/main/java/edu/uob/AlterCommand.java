@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class AlterCommand extends DBCommand {
     @Override
-    public DBResponse execute() throws IOException {
+    public DBResponse query() throws IOException {
         // Validate database is selected
         DBResponse validationResponse = validateDatabaseSelected();
         if (validationResponse != null) return validationResponse;
