@@ -68,7 +68,7 @@ public class JoinCommand extends DBCommand {
         result.append(String.join("\t", columnNames)).append("\n");
 
         if (rows.isEmpty()) {
-            result.append("[No matching rows to display]");
+            result.append("No matching rows");
         } else {
             for (List<String> row : rows) {
                 result.append(String.join("\t", row)).append("\n");

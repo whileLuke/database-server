@@ -82,7 +82,7 @@ class LogicalCondition extends ConditionNode {
     }
 }
 
-class NotCondition extends ConditionNode {
+/*class NotCondition extends ConditionNode {
     private final ConditionNode condition;
     public NotCondition(ConditionNode condition) {
         this.condition = condition;
@@ -92,4 +92,4 @@ class NotCondition extends ConditionNode {
     boolean evaluate(List<String> row, List<String> columns) {
         return !condition.evaluate(row, columns);
     }
-}
+}*/

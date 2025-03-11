@@ -36,10 +36,10 @@ public class ConditionParser {
     }
 
     private ConditionNode parseFactor() {
-        if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("NOT")) {
+        /*if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("NOT")) {
             index++;
             return new NotCondition(parseFactor());
-        }
+        }*/
 
         if (index < tokens.size() && tokens.get(index).equals("(")) {
             index++;

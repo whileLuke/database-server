@@ -47,7 +47,7 @@ public class SelectCommand extends DBCommand {
         }
 
         String formattedRows = formatRows(selectedColumns, filteredRows);
-        if (filteredRows.isEmpty()) return DBResponse.success("No matching rows.");
+        if (filteredRows.isEmpty()) return DBResponse.success(formattedRows);
 
         return DBResponse.success("Query executed successfully.", formattedRows);
     }
