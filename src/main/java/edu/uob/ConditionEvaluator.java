@@ -89,13 +89,6 @@ public class ConditionEvaluator {
         return result;
     }
 
-
-
-
-
-
-
-
     private void applyOperator(Stack<Boolean> values, String operator) {
         boolean b = values.pop();
         boolean a = values.pop();
