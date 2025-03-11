@@ -7,33 +7,22 @@ import java.util.List;
 public class UpdateCommand extends DBCommand {
     @Override
     public DBResponse query() throws IOException {
-        DBResponse validationResponse = validateDatabaseSelected();
-        if (validationResponse != null) return validationResponse;
-
-        validationResponse = validateTableNameProvided();
-        if (validationResponse != null) return validationResponse;
-
-        validationResponse = CommandValidator.validateValuesNotEmpty(values);
-        if (validationResponse != null) return validationResponse;
+        DBResponse validationResponse;
+        if ((validationResponse = validateDatabaseSelected()) != null) return validationResponse;
+        if ((validationResponse = validateTableNameProvided()) != null) return validationResponse;
+        if ((validationResponse = CommandValidator.validateValuesNotEmpty(values))!= null) return validationResponse;
 
         String tableName = tableNames.get(0).toLowerCase();
-
-        validationResponse = validateTableExists(tableName);
-        if (validationResponse != null) return validationResponse;
+        if ((validationResponse = validateTableExists(tableName)) != null) return validationResponse;
 
         Table table = getTable(tableName);
-
         for (String columnName : columnNames) {
-            validationResponse = CommandValidator.validateColumnExists(table, columnName);
-            if (validationResponse != null) return validationResponse;
-
-            validationResponse = CommandValidator.validateNotIdColumn(columnName);
-            if (validationResponse != null) return validationResponse;
+            if ((validationResponse = CommandValidator.validateColumnExists(table, columnName)) != null) return validationResponse;
+            if ((validationResponse = CommandValidator.validateNotIdColumn(columnName)) != null) return validationResponse;
         }
 
         List<String> processedValues = processValues(values);
-
-        if (conditions.isEmpty()) return DBResponse.error("UPDATE command requires a WHERE condition for safety.");
+        if (conditions.isEmpty()) return DBResponse.error("UPDATE command needs a WHERE condition.");
 
         try {
             List<String> tokens = tokenizeConditions(conditions);
