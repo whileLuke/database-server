@@ -19,8 +19,6 @@ public class CreateTableCommand extends DBCommand {
         /*if (tables.containsKey(tableName)) {
             return DBResponse.error("Table '" + tableName + "' already exists.");
         }*/
-
-        // Create table with specified columns
         Table newTable = new Table(tableName, columnNames);
         tables.put(tableName, newTable);
 
