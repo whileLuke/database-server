@@ -16,7 +16,7 @@ public class AlterCommand extends DBCommand {
         if (Objects.equals(columnName, "id")) return "[ERROR] Cannot alter the ID column.";
         Table table = tables.get(tableName);
         if (table == null) return "[ERROR] Table '" + tableName + "' does not exist in the current database.";
-        boolean success = false;
+        boolean success;
         if (commandType.equalsIgnoreCase("ADD")) {
             success = table.addColumn(columnName);
             if (!success) return "[ERROR] Column '" + columnName + "' already exists in table '" + tableName + "'.";
@@ -28,22 +28,5 @@ public class AlterCommand extends DBCommand {
         else return "[ERROR] Unknown ALTER operation: " + commandType + ". Please use either ADD or DROP.";
         if (saveCurrentDB()) return "[OK] Table '" + tableName + "' altered successfully.";
         else return "[ERROR] Failed to save altered table to the disk.";
-
-
-
-        /*if (commandType.equals("ADD")) {
-            if (table.addColumn(columnName)) {
-                return "[OK] Column '" + columnName + "' added to table '" + tableName + "'.";
-            } else {
-                return "[ERROR] Could not add column '" + columnName + "' (already exists?).";
-            }
-        } else if (commandType.equals("DROP")) {
-            if (table.dropColumn(columnName)) {
-                return "[OK] Column '" + columnName + "' dropped from table '" + tableName + "'.";
-            } else {
-                return "[ERROR] Could not drop column '" + columnName + "' (does not exist?).";
-            }
-        }
-        return "[ERROR] Unknown ALTER operation.";*/
     }
 }

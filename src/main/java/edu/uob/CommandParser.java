@@ -1,16 +1,17 @@
 package edu.uob;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class CommandParser extends DBServer {
     List<String> tokens = new ArrayList<>();
-    public String parseCommand(List<String> tokensList) throws Exception {
+    public String parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
         if (tokens.isEmpty()) return "[ERROR] No command entered.";
         if (tokens.size() == 1) return "[ERROR] Command is not long enough.";
-        DBCommand cmd = null;
+        DBCommand cmd;
         String firstToken = tokens.get(0).toUpperCase();
         switch (firstToken) {
             case "USE": cmd = parseUse(); break;
@@ -142,12 +143,10 @@ public class CommandParser extends DBServer {
 
             for (int i = startId + 1; i < tokens.size(); i++) {
                 String token = tokens.get(i);
-                // Remove semicolon only if it's at the end
                 if (i == tokens.size() - 1 && token.endsWith(";")) {
                     token = token.substring(0, token.length() - 1);
                 }
 
-                // Check for quotes to preserve them in conditions
                 if (token.startsWith("\"") && !token.endsWith("\"") || token.startsWith("'") && !token.endsWith("'")) {
                     inQuotes = true;
                 } else if ((token.endsWith("\"") && !token.startsWith("\"")) || (token.endsWith("'") && !token.startsWith("'"))) {
@@ -221,117 +220,4 @@ public class CommandParser extends DBServer {
         parseOptionalCondition(cmd, 3);
         return cmd;
     }
-
-    private boolean checkForSemicolon() {
-        return tokens.get(tokens.size() - 1).equals(";");
-    }
-
-    private boolean expectedToken(int index, String expected) {
-        return tokens.get(index).equalsIgnoreCase(expected);
-    }
-
-    private List<String> parseList(int startIndex, List<String> stopWords) {
-        List<String> list = new ArrayList<>();
-        for (int i = startIndex; i < tokens.size(); i++) {
-            String token = tokens.get(i).replace(",", "");
-            if (stopWords.contains(token.toUpperCase()) || token.equals(";")) break;
-            list.add(token);
-        }
-        return list;
-    }
-
-    private String parseCondition(int startIndex) {
-        StringBuilder condition = new StringBuilder();
-        for (int i = startIndex; i < tokens.size(); i++) {
-            String token = tokens.get(i);
-            if (token.equals(";")) break;
-            condition.append(token).append(" ");
-        }
-        return condition.toString().trim();
-    }
-
-    private String parseTableName(int index) {
-        String name = tokens.get(index);
-        return name.equals("*") ? null : name;
-    }
-
-    private String parseColumnName(int index) {
-        String name = tokens.get(index);
-        return name.equals("*") ? null : name;
-    }
 }
-
-
-
-
-
-
-
-//buikld up a command, takes all data need. all parsing first step, execute comand second step
-//recursive to send parser / recursive dissent parser
-//mechanical process based on BNF
-//parse whats coming in based on that
-//if command is select, call another method does next thin g of select.; rather than returning from select. go to parsewildattriobuteslist. if its a star look from from next to that. if not a star check it matsaches ther thing uit cioud ve.
-//once from look for table names needsot be a stirng or valid for table names
-//look at the garmmar buiuld up string based solely from the grammar
-//start implementing first bitchs of grammar that allow ineraction w tables and database
-//reading table from file like use database and writnig to file like create database
-//simple comands irst of all
-//parser: as it parses gonna build a subclass of DB commands. this is returned to DBServer (where initial string ocmes in)
-//server class will hold string of all tables. within it have a map of table names.
-//eg mammals has tables mareptiles primates etc. string name of table as the key to get to the in memory representation of the table calss
-//returned to DBserver passes a reference to itself as an argmenmt.
-//faciliitates error handling command bulding
-//go through string comes in. select * from actors etc.
-//go through recursive call stack, descending into it. all fit grammar in select statemnet. store it all as a DBcmd
-
-//so well have DBcmd
-//all can potentially contain data to execute comand
-//if select statment need table name and * and attributes list
-//conditional statement for selecting rows from table. needs to be stored in subclass of DBcmd in parsing.
-//abstract class DBcmd has unilitatised attributes for not comands nd one initalised that is correct
-//use blobs of te data based on what u ned.
-//eg conditions, colnames, tablenames, dbname, commandtype
-//will all get filled up
-//selectcmd or whatever
-//if first thing is select
-//dbcommand c = new selectcmd
-//if firs tthing is insert
-//dbcommand= new insertcmd
-//left hand side polymorphism
-
-//subclasses of dbcmd depedning on the first word.
-// once fnished parsing expression, returnes a DBcmd
-//execute a single method of that dbcmd which is query
-//dbcmd comes back eg c
-//c.query(DBserver s)
-//can access all thestates of that server class
-//selecting thigs from table, need to be able to access table name
-///map of tables, key for that map will be string for name of table like actors
-//column name likenames, folllow reference all states in tables via the this referce thatcomes in
-//similar to syntax tree -> budikling u[ a big data blob with all attributes needed to execute command
-//query command will do eerthig for us
-//diff depending on command
-//some will mutate or delete
-//String query(DBServer s)
-//diff subclasses will have diff implementations of that command
-//subclasses of dbcmd will have their own method of doing query
-//so abstract command dbcmd - with subclasses for all the diff types of command
-
-//table class
-//luist of lists repping rows
-//column names
-//mehods in there for getting stuff romf tables
-//repping database in memory map hash table
-//key table name to  key to table.
-//key will be a string
-// on disc rep of database subdirectory of database folder and tab files
-//with the call of a method ca write to there or pul to here into memeory
-
-//everytime mutates state of table, writing to disc. or eery time do something, write it to diskso its synchronised
-//keep map in server class
-//when server class passes the command in, itll be exposing all that state of subclass dbcmd executing that query.
-
-//fill sup evberything indbcmd
-
-//query will bave diff implementations in every subclass

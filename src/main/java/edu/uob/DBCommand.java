@@ -11,14 +11,5 @@ public abstract class DBCommand extends CommandParser {
     public List<String> columnNames = new ArrayList<>();
     public List<String> values = new ArrayList<>();
 
-    //public static void parse(String s) {
-    //conditions, colnames, tablenames, dbname, commandtype
-    //}
-    public abstract String query(DBServer server) throws Exception;
-    //public abstract void query(CommandParser commandParser);
+    public abstract String query(DBServer server) throws IOException;
 }
-
-//DBCommand d = use();
-//d.query(this);
-
-//Sring query(DBServer s)

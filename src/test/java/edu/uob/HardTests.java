@@ -11,14 +11,14 @@ public class HardTests {
     private DBServer server;
 
     @BeforeEach
-    public void setup() throws IOException, Exception {
+    public void setup() throws IOException {
         server = new DBServer();
         server.handleCommand("CREATE DATABASE test_db;");
         server.handleCommand("USE test_db;");
     }
 
     @Test
-    public void testDatabaseCreationEdgeCases() throws IOException, Exception {
+    public void testDatabaseCreationEdgeCases() throws IOException {
         // Test CREATE DATABASE with edge cases
         String createTestDbResponse = server.handleCommand("CREATE DATABASE test_db;");
         assertTrue(createTestDbResponse.contains("[ERROR]")); // Should fail as test_db already exists

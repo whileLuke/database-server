@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Table implements Serializable {
-    //private static final long serialVersionUID = 1L;
     private final List<String> columns;
     private final List<List<String>> rows;
     private final String name;
@@ -26,11 +25,7 @@ public class Table implements Serializable {
     public int getColumnIndex(String columnName) {
         return columns.indexOf(columnName);
     }
-
-    public boolean hasColumn(String columnName) {
-        return columns.contains(columnName);
-    }
-
+    
     public boolean addRow(List<String> row) {
         if (row.size() != columns.size()) {
             return false;

@@ -28,7 +28,6 @@ class SimpleCondition extends ConditionNode {
         String rowValue = row.get(index).trim();
         System.out.println("[DEBUG] Evaluating condition: Column = " + column + ", Row Value = '" + rowValue + "', Operator = '" + operator + "', Condition Value = '" + value + "'");
 
-        // Check if the condition value is quoted
         String conditionValue = value;
         if ((value.startsWith("\"") && value.endsWith("\"")) ||
                 (value.startsWith("'") && value.endsWith("'"))) {
@@ -36,7 +35,6 @@ class SimpleCondition extends ConditionNode {
         }
 
         try {
-            // Attempt numeric comparison if both values are numeric
             double rowNum = Double.parseDouble(rowValue);
             double compNum = Double.parseDouble(conditionValue);
             System.out.println("[DEBUG] Numeric Comparison: " + rowNum + " " + operator + " " + compNum);
@@ -51,7 +49,6 @@ class SimpleCondition extends ConditionNode {
                 default -> false;
             };
         } catch (NumberFormatException ignored) {
-            // String comparison
             System.out.println("[DEBUG] String Comparison: '" + rowValue + "' " + operator + " '" + conditionValue + "'");
 
             return switch (operator) {

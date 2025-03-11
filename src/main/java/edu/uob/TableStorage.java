@@ -8,7 +8,7 @@ import java.util.List;
 public class TableStorage {
     private static final String FILE_EXTENSION = ".tab";
 
-    public static boolean saveToFile(Table table, String databasePath) throws IOException {
+    public static boolean saveToFile(Table table, String databasePath) {
         File tableFile = new File(databasePath, table.getName() + FILE_EXTENSION);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableFile))) {

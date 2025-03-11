@@ -11,14 +11,14 @@ public class MyTests {
     private DBServer server;
 
     @BeforeEach
-    public void setup() throws IOException, Exception {
+    public void setup() throws IOException {
         server = new DBServer();
         server.handleCommand("CREATE DATABASE markbook;");
         server.handleCommand("USE markbook;");
     }
 
     @Test
-    public void testBasicCRUDOperations() throws IOException, Exception {
+    public void testBasicCRUDOperations() throws IOException {
         // Test CREATE TABLE command
         String createTableResponse = server.handleCommand("CREATE TABLE marks (name, mark, pass);");
         assertTrue(createTableResponse.contains("[OK]"));
@@ -70,7 +70,7 @@ public class MyTests {
     }
 
     @Test
-    public void testLIKEAndOtherSelectors() throws IOException, Exception {
+    public void testLIKEAndOtherSelectors() throws IOException {
         // Setup table and data
         server.handleCommand("CREATE TABLE marks (name, mark, pass);");
         server.handleCommand("INSERT INTO marks VALUES ('Simon', 65, TRUE);");

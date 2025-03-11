@@ -1,5 +1,6 @@
 package edu.uob;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,7 @@ public class SelectCommand extends DBCommand {
     public void setConditions(List<String> conditions) { this.conditions = conditions; }
 
     @Override
-    public String query(DBServer server) throws Exception {
+    public String query(DBServer server) throws IOException {
         //loadTables(currentDB);
         System.out.println("[DEBUG] Query called with conditions: " + conditions);
         if (currentDB == null) return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
@@ -31,13 +32,6 @@ public class SelectCommand extends DBCommand {
             }
         }
 
-        // Validate the WHERE conditions if
-        //MAY HAVE TO REINTEGRATE THIS
-        /*if (!conditions.isEmpty() && !isValidCondition(conditions, table.getColumns())) {
-            return "[ERROR] Invalid or missing condition in WHERE clause.";
-        }*/
-
-        // Perform the selection
         List<List<String>> filteredRows;
         TableQuery tableQuery = new TableQuery(table);
         try {
@@ -52,19 +46,13 @@ public class SelectCommand extends DBCommand {
                 filteredRows = new ArrayList<>();
                 extractSelectedData(table, filteredRows, columnIndexes);
             } else {
-                // For selection with conditions, use the query method
-                // Note: You'll need to adapt this part based on how you want to handle the return value
-                // since the original returns formatted strings but you need raw data
                 System.out.println("[DEBUG] Conditions passed to selectRowsWithConditions:" + conditions);
                 filteredRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
             }
         } catch (Exception e) {
-            // Handle exception
-            filteredRows = new ArrayList<>(); // Empty result on error
-            // You might want to log the error or handle it differently
+            filteredRows = new ArrayList<>();
         }
 
-        // Format the result
         if (filteredRows.isEmpty()) {
             return "[OK] No matching rows";
         }

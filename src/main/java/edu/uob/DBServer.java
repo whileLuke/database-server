@@ -45,7 +45,7 @@ public class DBServer {
     *
     * <p>This method handles all incoming DB commands and carries out the required actions.
     */
-    public String handleCommand(String command) throws IOException, Exception {
+    public String handleCommand(String command) throws IOException {
         // TODO implement your server logic here
         if (command == null || command.isEmpty()) return "[ERROR] Empty command.";
         if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (';').";

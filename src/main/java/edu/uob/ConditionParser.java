@@ -44,10 +44,10 @@ public class ConditionParser {
         }
 
         if (index < tokens.size() && tokens.get(index).equals("(")) {
-            index++; // Skip '('
+            index++;
             ConditionNode node = parseExpression();
             if (index < tokens.size() && tokens.get(index).equals(")")) {
-                index++; // Skip ')'
+                index++;
                 return node;
             }
             throw new RuntimeException("Missing closing parenthesis");
@@ -65,7 +65,6 @@ public class ConditionParser {
         String operator = tokens.get(index++);
         String value = tokens.get(index++);
 
-        // Handle NULL values specially
         if (value.equalsIgnoreCase("NULL")) {
             if (operator.equals("=")) {
                 return new NullCondition(column, true);
@@ -73,8 +72,6 @@ public class ConditionParser {
                 return new NullCondition(column, false);
             }
         }
-
-        // Just use SimpleCondition for LIKE, but pass the operator as is
         return new SimpleCondition(column, operator, value);
     }
 }

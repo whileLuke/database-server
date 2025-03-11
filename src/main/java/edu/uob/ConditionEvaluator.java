@@ -36,14 +36,15 @@ public class ConditionEvaluator {
 
 
         // String comparison
-        switch (operator) {
-            case "==": return rowValue.trim().equals(conditionValue.trim());
-            case "!=": return !rowValue.equals(conditionValue);
-            case "LIKE": return rowValue.contains(conditionValue);
-            default:
+        return switch (operator) {
+            case "==" -> rowValue.trim().equals(conditionValue.trim());
+            case "!=" -> !rowValue.equals(conditionValue);
+            case "LIKE" -> rowValue.contains(conditionValue);
+            default -> {
                 System.out.println("[ERROR] Unsupported operator: " + operator);
-                return false;
-        }
+                yield false;
+            }
+        };
     }
 
 
