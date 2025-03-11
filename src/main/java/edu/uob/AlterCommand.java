@@ -6,12 +6,11 @@ import java.util.Objects;
 public class AlterCommand extends DBCommand {
     @Override
     public String query(DBServer server) throws IOException {
-        //loadTables(currentDB);
         if (currentDB == null) return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
         if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) {
             return "[ERROR] Invalid ALTER TABLE command format.";
         }
-        String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/; // Only one table name is allowed
+        String tableName = tableNames.get(0).toLowerCase(); // Only one table name is allowed
         String columnName = columnNames.get(0);
         if (Objects.equals(columnName, "id")) return "[ERROR] Cannot alter the ID column.";
         Table table = tables.get(tableName);

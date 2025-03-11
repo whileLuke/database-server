@@ -5,8 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class CommandParser extends DBServer {
-    List<String> tokens = new ArrayList<>();
+public class CommandParser {
+    private List<String> tokens = new ArrayList<>();
+    private DBServer server;
+
+    public CommandParser(DBServer server) {
+        this.server = server;
+    }
+
     public String parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
         if (tokens.isEmpty()) return "[ERROR] No command entered.";
@@ -26,7 +32,8 @@ public class CommandParser extends DBServer {
             default: return error("Invalid command type: " + firstToken);
         }
         if(cmd == null) return error(firstToken + " command formatted incorrectly.");
-        return cmd.query(this);
+        cmd.setServer(server);  // Pass the server to the command
+        return cmd.query(server);
     }
 
     private String error(String message) { return "[ERROR] " + message; }
@@ -58,7 +65,7 @@ public class CommandParser extends DBServer {
         CreateTableCommand cmd = new CreateTableCommand();
         cmd.tableNames.add(tableName);
         if(tokens.size() == 4) {
-            tables.put(tableName, new Table(tableName, null));
+            server.getTables().put(tableName, new Table(tableName, null));
             return cmd;
         }
         int start = tokens.indexOf("(");
@@ -73,7 +80,7 @@ public class CommandParser extends DBServer {
             if (i + 1 < columns.size() && !columns.get(i + 1).equals(",") && !columns.get(i + 1).equals(")")) return null;
         }
 
-        tables.put(tableName, new Table(tableName, cmd.columnNames));
+        server.getTables().put(tableName, new Table(tableName, cmd.columnNames));
         return cmd;
     }
 
@@ -197,7 +204,6 @@ public class CommandParser extends DBServer {
         parseOptionalCondition(cmd, i);
         return cmd;
     }
-
 
     private DBCommand parseJoin() {
         if (tokens.size() != 9) return null;

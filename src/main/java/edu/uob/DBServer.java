@@ -46,13 +46,12 @@ public class DBServer {
     * <p>This method handles all incoming DB commands and carries out the required actions.
     */
     public String handleCommand(String command) throws IOException {
-        // TODO implement your server logic here
         if (command == null || command.isEmpty()) return "[ERROR] Empty command.";
         if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (';').";
         tokens.clear();
         query = command;
         setupQuery();
-        CommandParser parser = new CommandParser();
+        CommandParser parser = new CommandParser(this);
         System.out.println("tables is looking like" + tables);
         return parser.parseCommand(tokens);
     }
@@ -126,13 +125,13 @@ public class DBServer {
         return true;
     }
 
-    protected boolean useDatabase(String DBName) throws IOException {
+    public boolean useDatabase(String DBName) throws IOException {
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
         return loadTables(DBName.toLowerCase());
     }
 
-    protected boolean createDatabase(String DBName) {
+    public boolean createDatabase(String DBName) {
         if (DBName == null) return false;
         File DBDirectory = new File(storageFolderPath, DBName.toLowerCase());
         if (DBDirectory.exists()) return false;
@@ -159,6 +158,19 @@ public class DBServer {
             }
         }
         return directory.delete();
+    }
+
+    // Getter methods for properties that DBCommand needs
+    public String getCurrentDB() {
+        return currentDB;
+    }
+
+    public void setCurrentDB(String dbName) {
+        this.currentDB = dbName;
+    }
+
+    public Map<String, Table> getTables() {
+        return tables;
     }
 
         //  === Methods below handle networking aspects of the project - you will not need to change these ! ===

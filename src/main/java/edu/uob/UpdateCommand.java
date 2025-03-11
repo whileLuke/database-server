@@ -7,10 +7,16 @@ import java.util.List;
 public class UpdateCommand extends DBCommand {
     private List<String> conditions = new ArrayList<>();
 
-    public void setConditions(List<String> conditions) { this.conditions = conditions; }
+    public void setConditions(List<String> conditions) {
+        this.conditions = conditions;
+    }
 
     @Override
     public String query(DBServer server) throws IOException {
+        if (currentDB == null) {
+            return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
+        }
+
         if (tableNames.isEmpty() || columnNames.isEmpty() || values.isEmpty()) {
             return "[ERROR] Invalid UPDATE command format.";
         }
@@ -23,7 +29,7 @@ public class UpdateCommand extends DBCommand {
         }
 
         if (columnNames.size() != values.size()) {
-            return "[ERROR] The number of columns do not match the number of values.";
+            return "[ERROR] The number of columns does not match the number of values.";
         }
 
         try {
@@ -33,47 +39,52 @@ public class UpdateCommand extends DBCommand {
                 processedValues.add(removeQuotes(value));
             }
 
+            // Validate columns
+            for (String column : columnNames) {
+                if (!table.getColumns().contains(column)) {
+                    return "[ERROR] Column '" + column + "' does not exist in table '" + tableName + "'.";
+                }
+                if (column.equals("id")) {
+                    return "[ERROR] Cannot update the ID column.";
+                }
+            }
+
             int updatedRows = 0;
             List<List<String>> rows = table.getRows();
             List<String> columns = table.getColumns();
 
-            // Debug to verify conditions aren't empty
-            System.out.println("[DEBUG] Conditions in UpdateCommand: " + conditions);
-
-            if (!conditions.isEmpty()) {
+            if (conditions.isEmpty()) {
+                // Update all rows if no condition specified
+                for (List<String> row : rows) {
+                    updateRow(row, columns, columnNames, processedValues);
+                    updatedRows++;
+                }
+            } else {
                 // Create condition parser with tokenized conditions
                 List<String> tokens = tokenizeConditions(conditions);
-                System.out.println("[DEBUG] Tokenized conditions: " + tokens);
-
                 ConditionParser parser = new ConditionParser(tokens);
                 ConditionNode conditionTree = parser.parse();
 
                 // Update rows that match the condition
                 for (List<String> row : rows) {
                     boolean matches = conditionTree.evaluate(row, columns);
-                    System.out.println("[DEBUG] Row: " + row + " matches condition: " + matches);
-
                     if (matches) {
                         updateRow(row, columns, columnNames, processedValues);
                         updatedRows++;
                     }
                 }
-            } else {
-                // Update all rows if no condition specified
-                for (List<String> row : rows) {
-                    updateRow(row, columns, columnNames, processedValues);
-                    updatedRows++;
-                }
             }
 
             if (updatedRows > 0) {
-                saveCurrentDB();
-                return "[OK] " + updatedRows + " row(s) updated.";
+                if (saveCurrentDB()) {
+                    return "[OK] " + updatedRows + " row(s) updated.";
+                } else {
+                    return "[ERROR] Failed to save database after update.";
+                }
             } else {
                 return "[ERROR] No rows matched the update condition.";
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Add this to get full stack trace
             return "[ERROR] Failed to process update: " + e.getMessage();
         }
     }
@@ -93,7 +104,6 @@ public class UpdateCommand extends DBCommand {
     private List<String> tokenizeConditions(List<String> conditions) {
         List<String> tokens = new ArrayList<>();
         for (String condition : conditions) {
-            // Split condition while preserving operators
             String[] parts = condition.split("\\s+");
             for (String part : parts) {
                 if (!part.isEmpty()) {
