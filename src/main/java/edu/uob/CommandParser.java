@@ -3,20 +3,19 @@ package edu.uob;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class CommandParser {
     private List<String> tokens = new ArrayList<>();
-    private DBServer server;
+    private final DBServer server;
 
     public CommandParser(DBServer server) {
         this.server = server;
     }
 
-    public String parseCommand(List<String> tokensList) throws IOException {
+    public DBResponse parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
-        if (tokens.isEmpty()) return "[ERROR] No command entered.";
-        if (tokens.size() == 1) return "[ERROR] Command is not long enough.";
+        if (tokens.isEmpty()) return DBResponse.error("No command entered.");
+        if (tokens.size() == 1) return DBResponse.error("Command is not long enough.");
         DBCommand cmd;
         String firstToken = tokens.get(0).toUpperCase();
         switch (firstToken) {
@@ -29,18 +28,16 @@ public class CommandParser {
             case "UPDATE": cmd = parseUpdate(); break;
             case "JOIN": cmd = parseJoin(); break;
             case "DELETE": cmd = parseDelete(); break;
-            default: return error("Invalid command type: " + firstToken);
+            default: return DBResponse.error("Invalid command type: " + firstToken);
         }
-        if(cmd == null) return error(firstToken + " command formatted incorrectly.");
+        if(cmd == null) return DBResponse.error(firstToken + " command formatted incorrectly.");
         cmd.setServer(server);  // Pass the server to the command
-        return cmd.query(server);
+        return cmd.execute();
     }
-
-    private String error(String message) { return "[ERROR] " + message; }
 
     private boolean endsWithSemicolon() { return tokens.get(tokens.size() - 1).equals(";"); }
 
-    private boolean isAsterisk(String name) { return Objects.equals(name, "*"); }
+    private boolean isAsterisk(String name) { return name != null && name.equals("*"); }
 
     private DBCommand parseUse() {
         if (tokens.size() == 3 && endsWithSemicolon() && !isAsterisk(tokens.get(1))) {
