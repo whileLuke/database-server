@@ -35,9 +35,7 @@ public class DBTable {
     public boolean addColumn(String columnName) {
         if (columns.contains(columnName)) return false;
         columns.add(columnName);
-        for (List<String> row : rows) {
-            row.add("NULL");
-        }
+        for (List<String> row : rows) row.add(null);
         return true;
     }
 
@@ -49,15 +47,11 @@ public class DBTable {
         return true;
     }
 
-    public int generateNextID() {
+    public int generateNextID() throws IOException {
         addIdColumnIfNotExists();
-        int maxIDInRows = getMaxIDFromTable();
-        int maxIDFromFile = readMaxIDFromFile();
-
-        int maxID = Math.max(maxIDInRows, maxIDFromFile);
+        int maxID = Math.max(getMaxIDFromTable(), readMaxIDFromFile());
         int newID = maxID + 1;
-
-        saveNewMaxID(newID);
+        writeNewMaxID(newID);
         return newID;
     }
 
@@ -65,7 +59,7 @@ public class DBTable {
         int idColumnIndex = columns.indexOf("id");
         if (idColumnIndex == -1) {
             columns.add(0, "id");
-            for (List<String> row : rows) row.add(0, "0");
+            for (List<String> row : rows) row.add(0, null);
         }
     }
 
@@ -79,35 +73,26 @@ public class DBTable {
         return maxID;
     }
 
-    private int readMaxIDFromFile() {
+    private int readMaxIDFromFile() throws IOException {
         int maxID = 0;
         File maxIDFile = getMaxIDFile();
         if (maxIDFile.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(maxIDFile))) {
-                String line = reader.readLine();
-                if (line != null) {
-                    maxID = Integer.parseInt(line.trim());
-                }
-            } catch (IOException ignored) {}
+            BufferedReader reader = new BufferedReader(new FileReader(maxIDFile));
+            String maxIDInFile = reader.readLine();
+            if (maxIDInFile != null) maxID = Integer.parseInt(maxIDInFile.trim());
         }
         return maxID;
     }
 
     private File getMaxIDFile() {
         return new File(DBServer.storageFolderPath + File.separator +
-                DBServer.currentDB + File.separator +
-                tableName + ".maxid");
+                DBServer.currentDB + File.separator + tableName + ".maxid");
     }
 
-    private void saveNewMaxID(int newID) {
+    private void writeNewMaxID(int newID) throws IOException {
         File maxIDFile = getMaxIDFile();
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(maxIDFile))) {
-            writer.write(String.valueOf(newID));
-        } catch (IOException e) {
-            // Kept your original error message
-            System.err.println("Could not write to the maxID file" + e.getMessage());
-        }
+        BufferedWriter writer = new BufferedWriter(new FileWriter(maxIDFile));
+        writer.write(String.valueOf(newID));
     }
 
     @Override

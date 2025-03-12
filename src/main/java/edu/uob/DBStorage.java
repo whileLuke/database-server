@@ -1,30 +1,18 @@
 package edu.uob;
 
 import java.io.*;
-import java.nio.file.*;
+//import java.nio.file.*;
 import java.util.*;
 
 public class DBStorage {
     private final String baseStoragePath;
 
-    public DBStorage(String baseStoragePath) {
-        this.baseStoragePath = baseStoragePath;
-        ensureStorageDirectoryExists();
-    }
+    public DBStorage(String baseStoragePath) { this.baseStoragePath = baseStoragePath; }
 
-    private void ensureStorageDirectoryExists() {
-        try {
-            Files.createDirectories(Paths.get(baseStoragePath));
-        } catch (IOException e) {
-        }
-    }
-
-    public boolean createDatabase(String dbName) {
-        if (dbName == null || dbName.isEmpty()) return false;
-
-        File dbDirectory = getDatabaseDirectory(dbName);
+    public boolean createDatabase(String DBName) {
+        if (DBName == null || DBName.isEmpty()) return false;
+        File dbDirectory = getDatabaseDirectory(DBName);
         if (dbDirectory.exists()) return false;
-
         return dbDirectory.mkdirs();
     }
 
@@ -65,7 +53,7 @@ public class DBStorage {
 
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
-                String tableName = getTableNameFromFile(tableFile);
+                String tableName = getTableName(tableFile);
                 DBTable table = loadTableFromFile(dbName, tableName);
                 if (table != null) {
                     tables.put(tableName.toLowerCase(), table);
@@ -145,7 +133,7 @@ public class DBStorage {
         return new File(getDatabaseDirectory(dbName), tableName.toLowerCase() + ".tab");
     }
 
-    private String getTableNameFromFile(File tableFile) {
+    private String getTableName(File tableFile) {
         String fileName = tableFile.getName();
         return fileName.substring(0, fileName.lastIndexOf("."));
     }

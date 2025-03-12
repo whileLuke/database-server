@@ -11,7 +11,7 @@ public class DBResponse {
         this.data = data;
     }
 
-    public static DBResponse success(String message) {
+    /*public static DBResponse success(String message) {
         return new DBResponse(true, message, null);
     }
 
@@ -49,5 +49,5 @@ public class DBResponse {
         }
 
         return result.toString();
-    }
+    }*/
 }
