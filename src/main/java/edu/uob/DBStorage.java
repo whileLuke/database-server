@@ -106,26 +106,19 @@ public class DBStorage {
     private DBTable loadTableFromFile(String dbName, String tableName) throws IOException {
         File tableFile = getTableFile(dbName, tableName);
         if (!tableFile.exists()) return null;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(tableFile))) {
-            // Read headers
-            String headerLine = reader.readLine();
-            if (headerLine == null) return null;
-
-            List<String> columns = new ArrayList<>(Arrays.asList(headerLine.split("\t")));
-            DBTable table = new DBTable(tableName, columns);
-
-            // Read data rows
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.isEmpty()) {
-                    List<String> rowData = new ArrayList<>(Arrays.asList(line.split("\t")));
-                    table.addRowDirect(rowData);
-                }
+        BufferedReader reader = new BufferedReader(new FileReader(tableFile));
+        String headerLine = reader.readLine();
+        if (headerLine == null) return null;
+        List<String> columns = new ArrayList<>(Arrays.asList(headerLine.split("\t")));
+        DBTable table = new DBTable(tableName, columns);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (!line.isEmpty()) {
+                List<String> rowData = new ArrayList<>(Arrays.asList(line.split("\t")));
+                table.addRow(rowData);
             }
-
-            return table;
         }
+        return table;
     }
 
     private boolean writeTableToFile(DBTable table, File tableFile) throws IOException {
