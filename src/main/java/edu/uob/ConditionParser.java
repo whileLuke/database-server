@@ -6,51 +6,38 @@ public class ConditionParser {
     private final List<String> tokens;
     private int index = 0;
 
-    public ConditionParser(List<String> tokens) {
-        this.tokens = tokens;
-    }
+    public ConditionParser(List<String> tokens) { this.tokens = tokens; }
 
     public ConditionNode parse() {
         if (tokens.isEmpty()) return null;
-        return parseExpression();
+        return parseSequence();
     }
 
-    private ConditionNode parseExpression() {
-        ConditionNode left = parseTerm();
-        while (index < tokens.size() && tokens.get(index).equalsIgnoreCase("OR")) {
+    private ConditionNode parseSequence() {
+        ConditionNode left = parseParenthesis();
+
+        while (index < tokens.size() &&
+                (tokens.get(index).equalsIgnoreCase("AND") ||
+                        tokens.get(index).equalsIgnoreCase("OR"))) {
+            String operator = tokens.get(index);
             index++;
-            ConditionNode right = parseTerm();
-            left = new LogicalCondition("OR", left, right);
+            ConditionNode right = parseParenthesis();
+            left = new LogicalCondition(operator, left, right);
         }
+
         return left;
     }
 
-    private ConditionNode parseTerm() {
-        ConditionNode left = parseFactor();
-        while (index < tokens.size() && tokens.get(index).equalsIgnoreCase("AND")) {
-            index++;
-            ConditionNode right = parseFactor();
-            left = new LogicalCondition("AND", left, right);
-        }
-        return left;
-    }
-
-    private ConditionNode parseFactor() {
-        /*if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("NOT")) {
-            index++;
-            return new NotCondition(parseFactor());
-        }*/
-
+    private ConditionNode parseParenthesis() {
         if (index < tokens.size() && tokens.get(index).equals("(")) {
             index++;
-            ConditionNode node = parseExpression();
+            ConditionNode node = parseSequence();
             if (index < tokens.size() && tokens.get(index).equals(")")) {
                 index++;
                 return node;
             }
             throw new RuntimeException("Missing closing parenthesis");
         }
-
         return parseComparison();
     }
 

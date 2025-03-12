@@ -8,7 +8,8 @@ public class AlterCommand extends DBCommand {
         DBResponse validationResponse = validateDatabaseSelected();
         if (validationResponse != null) return validationResponse;
 
-        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) return DBResponse.error("Invalid ALTER TABLE command format.");
+        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null)
+            return DBResponse.error("Invalid ALTER TABLE command format.");
 
         String tableName = tableNames.get(0).toLowerCase();
         validationResponse = validateTableExists(tableName);
@@ -17,6 +18,11 @@ public class AlterCommand extends DBCommand {
         String columnName = columnNames.get(0);
         validationResponse = CommandValidator.validateNotIdColumn(columnName);
         if (validationResponse != null) return validationResponse;
+
+        // Check if the column name is a reserved word
+        if (NotAllowedWords.isNotAllowed(columnName)) {
+            return DBResponse.error("Cannot use reserved word '" + columnName + "' as a column name.");
+        }
 
         Table table = getTable(tableName);
         boolean success;
