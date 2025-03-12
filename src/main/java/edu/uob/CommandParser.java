@@ -14,24 +14,23 @@ public class CommandParser {
 
     public DBResponse parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
-        if (tokens.isEmpty()) return DBResponse.error("No command entered.");
-        if (tokens.size() == 1) return DBResponse.error("Command is not long enough.");
+        if (tokens.size() < 2) return DBResponse.error("The command you've entered is not long enough (or is empty). Every command must be at least 2 words long (followed by a semi-colon).");
         DBCommand cmd;
-        String firstToken = tokens.get(0).toUpperCase();
-        switch (firstToken) {
-            case "USE": cmd = parseUse(); break;
-            case "CREATE": cmd = parseCreate(); break;
-            case "DROP": cmd = parseDrop(); break;
-            case "ALTER": cmd = parseAlter(); break;
-            case "INSERT": cmd = parseInsert(); break;
-            case "SELECT": cmd = parseSelect(); break;
-            case "UPDATE": cmd = parseUpdate(); break;
-            case "JOIN": cmd = parseJoin(); break;
-            case "DELETE": cmd = parseDelete(); break;
-            default: return DBResponse.error("Invalid command type: " + firstToken);
+        String cmdType = tokens.get(0).toUpperCase();
+        switch (cmdType) {
+            case "USE" -> cmd = parseUse();
+            case "CREATE" -> cmd = parseCreate();
+            case "DROP" -> cmd = parseDrop();
+            case "ALTER" -> cmd = parseAlter();
+            case "INSERT" -> cmd = parseInsert();
+            case "SELECT" -> cmd = parseSelect();
+            case "UPDATE" -> cmd = parseUpdate();
+            case "JOIN" -> cmd = parseJoin();
+            case "DELETE" -> cmd = parseDelete();
+            default -> { return DBResponse.error("'" + cmdType + "' is an not a valid command type. Valid command types are: USE, CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, JOIN, DELETE"); }
         }
-        if(cmd == null) return DBResponse.error(firstToken + " command formatted incorrectly.");
-        cmd.setServer(server);  // Pass the server to the command
+        if(cmd == null) return DBResponse.error("Your command was unable to be executed - double check that it was formatted correctly");
+        cmd.setServer(server);
         return cmd.query();
     }
 

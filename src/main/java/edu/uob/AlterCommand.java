@@ -5,39 +5,30 @@ import java.io.IOException;
 public class AlterCommand extends DBCommand {
     @Override
     public DBResponse query() throws IOException {
-        DBResponse validationResponse = validateDatabaseSelected();
-        if (validationResponse != null) return validationResponse;
+        DBResponse validationResponse;
+        if ((validationResponse = validateDatabaseSelected()) != null) return validationResponse;
 
-        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null)
-            return DBResponse.error("Invalid ALTER TABLE command format.");
+        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) return DBResponse.error("Your ALTER command is incorrect - you may potentially not have provided a table name or any column names.");
 
         String tableName = tableNames.get(0).toLowerCase();
-        validationResponse = validateTableExists(tableName);
-        if (validationResponse != null) return validationResponse;
+        if ((validationResponse = validateTableExists(tableName)) != null) return validationResponse;
 
         String columnName = columnNames.get(0);
-        validationResponse = CommandValidator.validateNotIdColumn(columnName);
-        if (validationResponse != null) return validationResponse;
+        if ((validationResponse = CommandValidator.validateNotIdColumn(columnName)) != null) return validationResponse;
 
-        // Check if the column name is a reserved word
-        if (NotAllowedWords.isNotAllowed(columnName)) {
-            return DBResponse.error("Cannot use reserved word '" + columnName + "' as a column name.");
-        }
+        if (NotAllowedWords.isNotAllowed(columnName)) return DBResponse.error("The word '" + columnName + "' is not allowed as a column name in a table - it's a reserved SQL keyword - please try again without using reserved keywords.");
 
         Table table = getTable(tableName);
-        boolean success;
 
         if (commandType.equalsIgnoreCase("ADD")) {
-            success = table.addColumn(columnName);
-            if (!success) return DBResponse.error("Column '" + columnName + "' already exists in table '" + tableName + "'.");
+            if (!table.addColumn(columnName)) return DBResponse.error("That column - '" + columnName + "' - already exists in the table you're trying to add it into.");
         }
         else if (commandType.equalsIgnoreCase("DROP")) {
-            success = table.dropColumn(columnName);
-            if (!success) return DBResponse.error("Column '" + columnName + "' does not exist in table '" + tableName + "'.");
+            if (!table.dropColumn(columnName)) return DBResponse.error("That column - '" + columnName + "' - doesn't exist in the table you're trying to drop it from.");
         }
-        else return DBResponse.error("Unknown ALTER operation: " + commandType + ". Please use either ADD or DROP.");
+        else return DBResponse.error("Your ALTER command is incorrect. You did not specify either 'ADD' or 'DROP', which are the only two things an ALTER command can do.");
 
-        if (saveCurrentDB()) return DBResponse.success("Table '" + tableName + "' altered successfully.");
-        else return DBResponse.error("Failed to save altered table to the disk.");
+        if (saveCurrentDB()) return DBResponse.success("You have successfully altered the table" + tableName + ".");
+        else return DBResponse.error("The altered table could not be saved to your file system, something has gone wrong - check saving is working correctly.");
     }
 }

@@ -10,19 +10,21 @@ public class ConditionParser {
 
     public ConditionNode parse() {
         if (tokens.isEmpty()) return null;
-        return parseSequence();
+        return parseExpression();
     }
 
-    private ConditionNode parseSequence() {
+    private ConditionNode parseExpression() {
         ConditionNode left = parseParenthesis();
 
-        while (index < tokens.size() &&
-                (tokens.get(index).equalsIgnoreCase("AND") ||
-                        tokens.get(index).equalsIgnoreCase("OR"))) {
+        while (index < tokens.size()) {
             String operator = tokens.get(index);
+            if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) {
+                break;
+            }
+
             index++;
             ConditionNode right = parseParenthesis();
-            left = new LogicalCondition(operator, left, right);
+            left = new LogicalCondition(operator.toUpperCase(), left, right);
         }
 
         return left;
@@ -31,7 +33,7 @@ public class ConditionParser {
     private ConditionNode parseParenthesis() {
         if (index < tokens.size() && tokens.get(index).equals("(")) {
             index++;
-            ConditionNode node = parseSequence();
+            ConditionNode node = parseExpression();
             if (index < tokens.size() && tokens.get(index).equals(")")) {
                 index++;
                 return node;
@@ -51,9 +53,9 @@ public class ConditionParser {
         String value = tokens.get(index++);
 
         if (value.equalsIgnoreCase("NULL")) {
-            if (operator.equals("=")) {
+            if (operator.equals("==")) {
                 return new NullCondition(column, true);
-            } else if (operator.equals("!=") || operator.equals("<>")) {
+            } else if (operator.equals("!=")) {
                 return new NullCondition(column, false);
             }
         }

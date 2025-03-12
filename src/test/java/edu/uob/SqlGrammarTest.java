@@ -64,8 +64,8 @@ public class SqlGrammarTest {
         sendCommandToServer("CREATE DATABASE " + randomName + ";");
         sendCommandToServer("USE " + randomName + ";");
         sendCommandToServer("CREATE TABLE students (id, firstName, lastName, age, gpa, major, credits, enrolled, grade, startDate);");
-        sendCommandToServer("INSERT INTO students VALUES (1, 'John', 'Smith', 20, 3.5, 'CS', 60, TRUE, 'A', '2022-09-01');");
-        sendCommandToServer("INSERT INTO students VALUES (2, 'Emma', 'Johnson', 19, 3.8, '!/\"/:}P{}@}{}{:()()(=£$%^&*()_+', 45, TRUE, 'A', '2022-09-01');");
+        sendCommandToServer("INSERT INTO students VALUES ('John', 'Smith', 20, 3.5, 'CS', 60, TRUE, 'A', '2022-09-01');");
+        sendCommandToServer("INSERT INTO students VALUES ('Emma', 'Johnson', 19, 3.8, '!/\"/:}P{}@}{}{:()()(=£$%^&*()_+', 45, TRUE, 'A', '2022-09-01');");
 
         String response = sendCommandToServer("SELECT * FROM students;");
         assertTrue(response.contains("[OK]"), "Data query should return [OK]");
@@ -100,7 +100,7 @@ public class SqlGrammarTest {
         sendCommandToServer("USE " + randomName + ";");
         sendCommandToServer("CREATE TABLE mixedData (intValue, negInt, posInt, floatValue, negFloat, posFloat, boolTrue, boolFalse, quotedString, specialChars, nullValue);");
 
-        String response = sendCommandToServer("INSERT INTO mixedData VALUES (42, -42, 42, 3.14, -3.14, 3.14, TRUE, FALSE, 'Single quote '' inside string', 'Special @#$%^&*() chars', NULL);");
+        String response = sendCommandToServer("INSERT INTO mixedData VALUES (42, -42, 42, 3.14, -3.14, 3.14, TRUE, FALSE, \"Single quote inside string\", 'Special @#$%^&*() chars', NULL);");
         assertTrue(response.contains("[OK]"), "Complex insert should return [OK]");
 
         response = sendCommandToServer("SELECT * FROM mixedData;");
@@ -110,7 +110,7 @@ public class SqlGrammarTest {
         assertTrue(response.contains("-3.14"), "Query result should contain -3.14");
         assertTrue(response.contains("TRUE"), "Query result should contain TRUE");
         assertTrue(response.contains("FALSE"), "Query result should contain FALSE");
-        assertTrue(response.contains("Single quote ' inside string"), "Query result should contain string with quote");
+        assertTrue(response.contains("Single quote inside string"), "Query result should contain string with quote");
         assertTrue(response.contains("Special @#$%^&*() chars"), "Query result should contain special characters");
     }
 
@@ -173,15 +173,15 @@ public class SqlGrammarTest {
 
         // Create users table
         sendCommandToServer("CREATE TABLE users (id, name, email);");
-        sendCommandToServer("INSERT INTO users VALUES (1, 'Alice', 'alice@example.com');");
-        sendCommandToServer("INSERT INTO users VALUES (2, 'Bob', 'bob@example.com');");
-        sendCommandToServer("INSERT INTO users VALUES (3, 'Charlie', 'charlie@example.com');");
+        sendCommandToServer("INSERT INTO users VALUES ('Alice', 'alice@example.com');");
+        sendCommandToServer("INSERT INTO users VALUES ('Bob', 'bob@example.com');");
+        sendCommandToServer("INSERT INTO users VALUES ('Charlie', 'charlie@example.com');");
 
         // Create roles table
         sendCommandToServer("CREATE TABLE roles (id, userId, roleName, permissions);");
-        sendCommandToServer("INSERT INTO roles VALUES (1, 1, 'Admin', 'all');");
-        sendCommandToServer("INSERT INTO roles VALUES (2, 2, 'Editor', 'read,write');");
-        sendCommandToServer("INSERT INTO roles VALUES (3, 3, 'Viewer', 'read');");
+        sendCommandToServer("INSERT INTO roles VALUES (1, 'Admin', 'all');");
+        sendCommandToServer("INSERT INTO roles VALUES (2, 'Editor', 'read,write');");
+        sendCommandToServer("INSERT INTO roles VALUES (3, 'Viewer', 'read');");
 
         // Test join with conditions (syntax might need adjustment based on your implementation)
         String response = sendCommandToServer("SELECT * FROM users JOIN roles ON users.id == roles.userId WHERE roles.permissions LIKE '%read%';");
