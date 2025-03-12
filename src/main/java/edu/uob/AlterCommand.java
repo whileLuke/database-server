@@ -18,7 +18,7 @@ public class AlterCommand extends DBCommand {
 
         if (NotAllowedWords.isNotAllowed(columnName)) return DBResponse.error("The word '" + columnName + "' is not allowed as a column name in a table - it's a reserved SQL keyword - please try again without using reserved keywords.");
 
-        Table table = getTable(tableName);
+        DBTable table = getTable(tableName);
 
         if (commandType.equalsIgnoreCase("ADD")) {
             if (!table.addColumn(columnName)) return DBResponse.error("That column - '" + columnName + "' - already exists in the table you're trying to add it into.");

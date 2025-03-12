@@ -15,7 +15,7 @@ public class UpdateCommand extends DBCommand {
         String tableName = tableNames.get(0).toLowerCase();
         if ((validationResponse = validateTableExists(tableName)) != null) return validationResponse;
 
-        Table table = getTable(tableName);
+        DBTable table = getTable(tableName);
         for (String columnName : columnNames) {
             if ((validationResponse = CommandValidator.validateColumnExists(table, columnName)) != null) return validationResponse;
             if ((validationResponse = CommandValidator.validateNotIdColumn(columnName)) != null) return validationResponse;

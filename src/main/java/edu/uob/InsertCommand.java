@@ -1,7 +1,6 @@
 package edu.uob;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class InsertCommand extends DBCommand {
@@ -24,7 +23,7 @@ public class InsertCommand extends DBCommand {
         validationResponse = validateTableExists(tableName);
         if (validationResponse != null) return validationResponse;
 
-        Table table = getTable(tableName);
+        DBTable table = getTable(tableName);
 
         // Process values - remove quotes
         List<String> processedValues = processValues(values);

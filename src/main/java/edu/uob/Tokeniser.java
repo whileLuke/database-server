@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Tokeniser {
-    private static final String[] SPECIAL_CHARACTERS = {"(", ")", ",", ";", "!", ">", "<", "="};
+    private static final String[] special_chars = {"(", ")", ",", ";", "!", ">", "<", "="};
 
     public List<String> tokenise(String input) {
         List<String> tokens = new ArrayList<>();
@@ -31,7 +31,7 @@ public class Tokeniser {
     }
 
     private String[] tokeniseParts(String input) {
-        for (String specialCharacter : SPECIAL_CHARACTERS) input = input.replace(specialCharacter, " " + specialCharacter + " ");
+        for (String specialCharacter : special_chars) input = input.replace(specialCharacter, " " + specialCharacter + " ");
 
         while (input.contains("  ")) input = input.replace("  ", " ");
 

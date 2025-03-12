@@ -14,7 +14,7 @@ public class CommandParser {
 
     public DBResponse parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
-        if (tokens.size() < 2) return DBResponse.error("The command you've entered is not long enough (or is empty). Every command must be at least 2 words long (followed by a semi-colon).");
+        if (tokens.size() < 2) return DBResponse.error("The command you've entered is not long enough (or is empty).");
         DBCommand cmd;
         String cmdType = tokens.get(0).toUpperCase();
         switch (cmdType) {
@@ -27,16 +27,16 @@ public class CommandParser {
             case "UPDATE" -> cmd = parseUpdate();
             case "JOIN" -> cmd = parseJoin();
             case "DELETE" -> cmd = parseDelete();
-            default -> { return DBResponse.error("'" + cmdType + "' is an not a valid command type. Valid command types are: USE, CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, JOIN, DELETE"); }
+            default -> { return DBResponse.error("'" + cmdType + "' is not a valid command type."); }
         }
-        if(cmd == null) return DBResponse.error("Your command was unable to be executed - double check that it was formatted correctly");
+        if(cmd == null) return DBResponse.error("Your command was not formatted correctly.");
         cmd.setServer(server);
         return cmd.query();
     }
 
     private boolean endsWithSemicolon() { return tokens.get(tokens.size() - 1).equals(";"); }
 
-    private boolean isAsterisk(String name) { return name != null && name.equals("*"); }
+    private boolean isAsterisk(String name) { return name.equals("*"); }
 
     private DBCommand parseUse() {
         if (tokens.size() == 3 && endsWithSemicolon() && !isAsterisk(tokens.get(1))) {
@@ -49,38 +49,41 @@ public class CommandParser {
     private DBCommand parseCreate() {
         if (tokens.size() < 4) return null;
         String createType = tokens.get(1).toLowerCase();
-        if (createType.equals("database")) return createDatabase();
-        if (createType.equals("table")) return createTable();
+        if (createType.equals("database")) return parseCreateDatabase();
+        if (createType.equals("table")) return parseCreateTable();
         return null;
     }
 
-    private DBCommand createTable() {
-        if (!endsWithSemicolon() || tokens.size() < 4) return null;
-
+    private DBCommand parseCreateTable() {
+        if (tokens.size() < 4 || !endsWithSemicolon()) return null;
         String tableName = tokens.get(2);
         CreateTableCommand cmd = new CreateTableCommand();
         cmd.tableNames.add(tableName);
         if(tokens.size() == 4) {
-            server.getTables().put(tableName, new Table(tableName, null));
+            server.getTables().put(tableName, new DBTable(tableName, null));
             return cmd;
         }
         int start = tokens.indexOf("(");
         int end = tokens.lastIndexOf(")");
         if (start < 0 || end < 0 || end <= start) return null;
-
-        List<String> columns = tokens.subList(start + 1, end);
-        for (int i = 0; i < columns.size(); i += 2) {
-            String column = columns.get(i);
-            if (isAsterisk(column)) return null;
-            cmd.columnNames.add(column);
-            if (i + 1 < columns.size() && !columns.get(i + 1).equals(",") && !columns.get(i + 1).equals(")")) return null;
-        }
-
-        server.getTables().put(tableName, new Table(tableName, cmd.columnNames));
+        if (!parseTableColumns(start, end, cmd)) return null;
+        server.getTables().put(tableName, new DBTable(tableName, cmd.columnNames));
         return cmd;
     }
 
-    private DBCommand createDatabase() {
+    private boolean parseTableColumns(int start, int end, CreateTableCommand cmd) {
+        List<String> columns = tokens.subList(start + 1, end);
+        for (int i = 0; i < columns.size(); i += 2) {
+            String column = columns.get(i);
+            if (isAsterisk(column)) return false;
+            cmd.columnNames.add(column);
+            if (i + 1 < columns.size() && !columns.get(i + 1).equals(",") && !columns.get(i + 1).equals(")"))
+                return false;
+        }
+        return true;
+    }
+
+    private DBCommand parseCreateDatabase() {
         if (tokens.size() == 4 && endsWithSemicolon() && !isAsterisk(tokens.get(2))) {
             CreateDatabaseCommand cmd = new CreateDatabaseCommand();
             cmd.DBName = tokens.get(2);

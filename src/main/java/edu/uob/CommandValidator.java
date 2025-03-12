@@ -10,15 +10,15 @@ public class CommandValidator {
         return null;
     }
 
-    public static DBResponse validateTableExists(Map<String, Table> tables, String tableName) {
+    public static DBResponse validateTableExists(Map<String, DBTable> tables, String tableName) {
         if (tableName == null || tableName.isEmpty()) return DBResponse.error("Table name is missing.");
 
-        Table table = tables.get(tableName.toLowerCase());
+        DBTable table = tables.get(tableName.toLowerCase());
         if (table == null) return DBResponse.error("Table '" + tableName + "' does not exist in the current database.");
         return null;
     }
 
-    public static DBResponse validateColumnExists(Table table, String columnName) {
+    public static DBResponse validateColumnExists(DBTable table, String columnName) {
         if (columnName == null || columnName.isEmpty()) return DBResponse.error("Column name is missing.");
 
         if (!table.getColumns().contains(columnName)) return DBResponse.error("Column '" + columnName + "' does not exist in table '" + table.getName() + "'.");

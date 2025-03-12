@@ -18,7 +18,7 @@ public class SelectCommand extends DBCommand {
         validationResponse = validateTableExists(tableName);
         if (validationResponse != null) return validationResponse;
 
-        Table table = getTable(tableName);
+        DBTable table = getTable(tableName);
 
         List<String> selectedColumns;
         if (columnNames.contains("*")) selectedColumns = table.getColumns();
@@ -52,7 +52,7 @@ public class SelectCommand extends DBCommand {
         return DBResponse.success("Query executed successfully.", formattedRows);
     }
 
-    private void extractSelectedData(Table table, List<List<String>> filteredRows, List<Integer> columnIndexes) {
+    private void extractSelectedData(DBTable table, List<List<String>> filteredRows, List<Integer> columnIndexes) {
         for (List<String> row : table.getRows()) {
             List<String> filteredRow = new ArrayList<>();
             for (int index : columnIndexes) filteredRow.add(row.get(index));

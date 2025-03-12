@@ -15,19 +15,17 @@ public class CreateTableCommand extends DBCommand {
 
         String tableName = tableNames.get(0).toLowerCase();
 
-        // Check if the table name is a reserved word
         if (NotAllowedWords.isNotAllowed(tableName)) {
             return DBResponse.error("Cannot use reserved word '" + tableName + "' as a table name.");
         }
 
-        // Check column names as well
         for (String columnName : columnNames) {
             if (NotAllowedWords.isNotAllowed(columnName)) {
                 return DBResponse.error("Cannot use reserved word '" + columnName + "' as a column name.");
             }
         }
 
-        Table newTable = new Table(tableName, columnNames);
+        DBTable newTable = new DBTable(tableName, columnNames);
         tables.put(tableName, newTable);
 
         if (saveCurrentDB()) {

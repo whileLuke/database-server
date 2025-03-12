@@ -54,19 +54,19 @@ public class DBStorage {
         return directory.delete();
     }
 
-    public Map<String, Table> loadTables(String dbName) throws IOException {
+    public Map<String, DBTable> loadTables(String dbName) throws IOException {
         File dbDirectory = getDatabaseDirectory(dbName);
         if (!dbDirectory.exists() || !dbDirectory.isDirectory()) {
             throw new IOException("Database directory does not exist: " + dbName);
         }
 
-        Map<String, Table> tables = new HashMap<>();
+        Map<String, DBTable> tables = new HashMap<>();
         File[] tableFiles = dbDirectory.listFiles((dir, name) -> name.endsWith(".tab"));
 
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
                 String tableName = getTableNameFromFile(tableFile);
-                Table table = loadTableFromFile(dbName, tableName);
+                DBTable table = loadTableFromFile(dbName, tableName);
                 if (table != null) {
                     tables.put(tableName.toLowerCase(), table);
                 }
@@ -76,7 +76,7 @@ public class DBStorage {
         return tables;
     }
 
-    public boolean saveTable(Table table, String dbName) throws IOException {
+    public boolean saveTable(DBTable table, String dbName) throws IOException {
         if (table == null || dbName == null || dbName.isEmpty()) return false;
 
         File dbDirectory = getDatabaseDirectory(dbName);
@@ -90,11 +90,11 @@ public class DBStorage {
         return writeTableToFile(table, tableFile);
     }
 
-    public boolean saveTables(Map<String, Table> tables, String dbName) throws IOException {
+    public boolean saveTables(Map<String, DBTable> tables, String dbName) throws IOException {
         if (tables == null || dbName == null || dbName.isEmpty()) return false;
 
         boolean allSaved = true;
-        for (Table table : tables.values()) {
+        for (DBTable table : tables.values()) {
             if (!saveTable(table, dbName)) {
                 allSaved = false;
             }
@@ -103,7 +103,7 @@ public class DBStorage {
         return allSaved;
     }
 
-    private Table loadTableFromFile(String dbName, String tableName) throws IOException {
+    private DBTable loadTableFromFile(String dbName, String tableName) throws IOException {
         File tableFile = getTableFile(dbName, tableName);
         if (!tableFile.exists()) return null;
 
@@ -113,7 +113,7 @@ public class DBStorage {
             if (headerLine == null) return null;
 
             List<String> columns = new ArrayList<>(Arrays.asList(headerLine.split("\t")));
-            Table table = new Table(tableName, columns);
+            DBTable table = new DBTable(tableName, columns);
 
             // Read data rows
             String line;
@@ -128,7 +128,7 @@ public class DBStorage {
         }
     }
 
-    private boolean writeTableToFile(Table table, File tableFile) throws IOException {
+    private boolean writeTableToFile(DBTable table, File tableFile) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableFile))) {
             // Write headers
             writer.write(String.join("\t", table.getColumns()));

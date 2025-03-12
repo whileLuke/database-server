@@ -19,7 +19,7 @@ public class DeleteCommand extends DBCommand {
         validationResponse = validateTableExists(tableName);
         if (validationResponse != null) return validationResponse;
 
-        Table table = getTable(tableName);
+        DBTable table = getTable(tableName);
 
         if (conditions.isEmpty()) {
             return DBResponse.error("DELETE command requires a WHERE condition.");

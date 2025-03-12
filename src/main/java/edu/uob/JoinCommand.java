@@ -25,8 +25,8 @@ public class JoinCommand extends DBCommand {
         validationResponse = validateTableExists(table2Name);
         if (validationResponse != null) return validationResponse;
 
-        Table table1 = getTable(table1Name);
-        Table table2 = getTable(table2Name);
+        DBTable table1 = getTable(table1Name);
+        DBTable table2 = getTable(table2Name);
 
         if (columnNames.size() != 2) {
             return DBResponse.error("JOIN requires exactly two column names.");

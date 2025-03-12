@@ -13,15 +13,14 @@ import java.util.*;
 public class DBServer {
 
     private static final char END_OF_TRANSMISSION = 4;
-    public static final String FILE_EXTENSION = ".tab";
-    public String storageFolderPath;
+    public static String storageFolderPath;
     private final DBStorage storage;
     private final Tokeniser tokeniser;
-    private String query;
+    //private String query;
     public static String currentDB;
-    public static Map<String, Table> tables = new HashMap<String, Table>();
-    String[] specialCharacters = {"(",")",",",";","!",">","<","="};
-    ArrayList<String> tokens = new ArrayList<String>();
+    public static Map<String, DBTable> tables = new HashMap<String, DBTable>();
+    //String[] specialCharacters = {"(",")",",",";","!",">","<","="};
+    //ArrayList<String> tokens = new ArrayList<String>();
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
@@ -102,13 +101,9 @@ public class DBServer {
         return currentDB;
     }
 
-    public void setCurrentDB(String dbName) {
-        this.currentDB = dbName;
-    }
+   // public void setCurrentDB(String dbName) { this.currentDB = dbName; }
 
-    public Map<String, Table> getTables() {
-        return tables;
-    }
+    public Map<String, DBTable> getTables() { return tables; }
 
     public String getStorageFolderPath() {
         return storageFolderPath;

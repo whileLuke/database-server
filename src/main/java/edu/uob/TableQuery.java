@@ -4,13 +4,13 @@ package edu.uob;
 import java.util.*;
 
 public class TableQuery {
-    private final Table table;
+    private final DBTable table;
 
-    public TableQuery(Table table) {
+    public TableQuery(DBTable table) {
         this.table = table;
     }
 
-    public List<List<String>> joinWith(Table otherTable, String thisColumn, String otherColumn) {
+    public List<List<String>> joinWith(DBTable otherTable, String thisColumn, String otherColumn) {
         int thisColumnIndex = table.getColumnIndex(thisColumn);
         int otherColumnIndex = otherTable.getColumnIndex(otherColumn);
 

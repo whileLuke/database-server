@@ -15,7 +15,7 @@ public abstract class DBCommand {
 
     // References to important data from DBServer
     protected String currentDB;
-    protected Map<String, Table> tables;
+    protected Map<String, DBTable> tables;
     protected DBServer server;
 
     public void setServer(DBServer server) {
@@ -49,7 +49,7 @@ public abstract class DBCommand {
         return processedValues;
     }
 
-    protected Table getTable(String tableName) {
+    protected DBTable getTable(String tableName) {
         if (tableName == null) return null;
         return tables.get(tableName.toLowerCase());
     }
