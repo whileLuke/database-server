@@ -52,7 +52,8 @@ public class DBServer {
     */
     public String handleCommand(String command) throws IOException {
         if (command == null || command.isEmpty()) return "[ERROR] Cannot have an empty command.";
-        if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (';').";
+        if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (\";\").";
+        if (command.contains("\"")) return "[ERROR] Command must not contain double quotes (\").";
         List<String> tokens = tokeniser.tokenise(command);
         CommandParser parser = new CommandParser(this);
         return parser.parseCommand(tokens); //Might need an error message or not here.

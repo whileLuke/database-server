@@ -9,22 +9,14 @@ public class InputTokeniser {
 
     public List<String> tokenise(String input) {
         List<String> tokens = new ArrayList<>();
-        //boolean inQuotes = false;
-        //boolean inDoubleQuotes = false;
         String[] inQuotesParts = input.split("'");
         List<String> betweenQuotes = new ArrayList<>();
 
         for (int i = 0; i < inQuotesParts.length; i++) {
             if (i % 2 != 0) betweenQuotes.add("'" + inQuotesParts[i] + "'");
             else {
-                String[] inDoubleQuotesParts = inQuotesParts[i].split("\"");
-                for (int j = 0; j < inDoubleQuotesParts.length; j++) {
-                    if (j % 2 != 0) betweenQuotes.add("\"" + inDoubleQuotesParts[j] + "\"");
-                    else {
-                        String[] otherTokens = tokeniseParts(inDoubleQuotesParts[j]);
-                        betweenQuotes.addAll(Arrays.asList(otherTokens));
-                    }
-                }
+                String[] otherTokens = tokeniseParts(inQuotesParts[i]);
+                betweenQuotes.addAll(Arrays.asList(otherTokens));
             }
         }
         return betweenQuotes;

@@ -158,10 +158,12 @@ public class CommandParser {
         for (int i = index; i < tokens.size(); i++) {
             String token = tokens.get(i);
             if (i == tokens.size() - 1 && token.endsWith(";")) token = token.substring(0, token.length() - 1);
-            if (token.startsWith("\"") && !token.endsWith("\"") || token.startsWith("'") && !token.endsWith("'")) {
-                inQuotes = true;
-            } else if ((token.endsWith("\"") && !token.startsWith("\"")) ||
-                    (token.endsWith("'") && !token.startsWith("'"))) inQuotes = false;
+
+            if (token.startsWith("'") && !token.endsWith("'")) inQuotes = true;
+
+            //else if (
+            //        (token.endsWith("'") && !token.startsWith("'"))) inQuotes = false; //TODO: maybe edit this so that if it starts or ends with a quote then we return null.
+
             if (!inQuotes && (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR"))) {
                 if (!condition.isEmpty()) {
                     conditions.add(condition.toString().trim());
@@ -191,7 +193,7 @@ public class CommandParser {
             index++;
             if (index >= tokens.size() || !tokens.get(index).equals("=")) return -1;
             index++;
-            cmd.values.add(tokens.get(index).replace("'", "").replace("\"", "")); //Not sure If this is needed. Test it out wit some practice Select commands.
+            cmd.values.add(tokens.get(index).replace("'", "")); //Not sure If this is needed. Test it out wit some practice Select commands.
             index++;
             if (index >= tokens.size()) return -1;
             if (tokens.get(index).equals(",")) index++;

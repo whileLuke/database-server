@@ -32,8 +32,7 @@ public abstract class DBCommand {
 
     protected String removeQuotes(String stringToEdit) {
         if (stringToEdit == null) return "";
-        if ((stringToEdit.startsWith("'") && stringToEdit.endsWith("'")) ||
-                (stringToEdit.startsWith("\"") && stringToEdit.endsWith("\""))) {
+        if (stringToEdit.startsWith("'") && stringToEdit.endsWith("'")) {
             return stringToEdit.substring(1, stringToEdit.length() - 1);
         }
         return stringToEdit;
