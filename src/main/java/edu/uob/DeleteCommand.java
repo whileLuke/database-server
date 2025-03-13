@@ -19,7 +19,7 @@ public class DeleteCommand extends DBCommand {
         if (conditions.isEmpty()) return "[ERROR] DELETE commands require a WHERE condition.";
         List<List<String>> rows = table.getRows();
         List<String> columns = table.getColumns();
-        List<String> tokens = tokenizeConditions(conditions);
+        List<String> tokens = tokeniseConditions(conditions);
         ConditionParser parser = new ConditionParser(tokens);
         ConditionNode conditionTree = parser.parse();
         int initialRowCount = rows.size();
@@ -36,7 +36,7 @@ public class DeleteCommand extends DBCommand {
         } else return "[OK] No rows deleted from the database."; //Maybe print column names here.
     }
 
-    private List<String> tokenizeConditions(List<String> conditions) {
+    private List<String> tokeniseConditions(List<String> conditions) {
         List<String> tokens = new ArrayList<>();
         for (String condition : conditions) {
             String[] parts = condition.split("\\s+");

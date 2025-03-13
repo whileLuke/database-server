@@ -46,7 +46,7 @@ public class CommandErrorChecker {
         return null;
     }
 
-    public String validateNotIdColumn(String columnName) {
+    public String validateNotIDColumn(String columnName) {
         if (columnName.equalsIgnoreCase("id")) return "[ERROR] You cannot change the ID column.";
         return null;
     }

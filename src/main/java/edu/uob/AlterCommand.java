@@ -14,7 +14,7 @@ public class AlterCommand extends DBCommand {
         error = errorChecker.validateTableExists(tableName);
         if (error != null) return error;
         String columnName = columnNames.get(0);
-        error = errorChecker.validateNotIdColumn(columnName);
+        error = errorChecker.validateNotIDColumn(columnName);
         if (error != null) return error;
         if (errorChecker.isReservedWord(columnName)) return "[ERROR] '" + columnName + "' not allowed as a column name";
         DBTable table = getTable(tableName);

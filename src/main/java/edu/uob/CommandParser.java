@@ -191,24 +191,31 @@ public class CommandParser {
         int index = 3;
         while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("WHERE")) {
             cmd.columnNames.add(tokens.get(index));
-            if (++index >= tokens.size() || !tokens.get(index).equals("=")) return -1;
-            cmd.values.add(tokens.get(++index).replace("'", ""));
-            if (++index >= tokens.size()) return -1;
+            index++;
+            if (index >= tokens.size() || !tokens.get(index).equals("=")) return -1;
+            index++;
+            cmd.values.add(tokens.get(index).replace("'", "").replace("\"", "")); //Not sure If this is needed. Test it out wit some practice Select commands.
+            index++;
+            if (index >= tokens.size()) return -1;
             if (tokens.get(index).equals(",")) index++;
         }
         return index;
     }
 
     private DBCommand parseJoin() {
-        if (tokens.size() != 9) return null;
+        if (tokens.size() != 9 || !isValidJoinSyntax()) return null;
         JoinCommand cmd = new JoinCommand();
-        if (!tokens.get(2).equalsIgnoreCase("AND") || !tokens.get(4).equalsIgnoreCase("ON") ||
-                !tokens.get(6).equalsIgnoreCase("AND")) return null;
         cmd.tableNames.add(tokens.get(1));
         cmd.tableNames.add(tokens.get(3));
         cmd.columnNames.add(tokens.get(5));
-        cmd.columnNames.add(tokens.get(7).replace(";", ""));
+        cmd.columnNames.add(tokens.get(7));
         return cmd;
+    }
+
+    private boolean isValidJoinSyntax() {
+        return tokens.get(2).equalsIgnoreCase("AND") &&
+                tokens.get(4).equalsIgnoreCase("ON") &&
+                tokens.get(6).equalsIgnoreCase("AND");
     }
 
     private DBCommand parseDelete() {
