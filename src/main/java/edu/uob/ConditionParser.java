@@ -15,18 +15,13 @@ public class ConditionParser {
 
     private ConditionNode parseExpression() {
         ConditionNode left = parseParenthesis();
-
         while (index < tokens.size()) {
             String operator = tokens.get(index);
-            if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) {
-                break;
-            }
-
+            if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) break;
             index++;
             ConditionNode right = parseParenthesis();
             left = new LogicalCondition(operator.toUpperCase(), left, right);
         }
-
         return left;
     }
 
@@ -44,21 +39,14 @@ public class ConditionParser {
     }
 
     private ConditionNode parseComparison() {
-        if (index + 2 >= tokens.size()) {
-            throw new RuntimeException("Incomplete comparison at index " + index);
-        }
-
-        String column = tokens.get(index++);
+        if (index + 2 >= tokens.size()) return null;
+        String columnName = tokens.get(index++);
         String operator = tokens.get(index++);
         String value = tokens.get(index++);
-
         if (value.equalsIgnoreCase("NULL")) {
-            if (operator.equals("==")) {
-                return new NullCondition(column, true);
-            } else if (operator.equals("!=")) {
-                return new NullCondition(column, false);
-            }
+            if (operator.equals("==")) return new NullCondition(columnName, true);
+            else if (operator.equals("!=")) return new NullCondition(columnName, false);
         }
-        return new SimpleCondition(column, operator, value);
+        return new SimpleCondition(columnName, operator, value);
     }
 }
