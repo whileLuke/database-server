@@ -16,7 +16,7 @@ public class AlterCommand extends DBCommand {
         String columnName = columnNames.get(0);
         error = errorChecker.validateNotIdColumn(columnName);
         if (error != null) return error;
-        if (ReservedWords.isNotAllowed(columnName)) return "[ERROR] '" + columnName + "' is not allowed as a column name";
+        if (errorChecker.isReservedWord(columnName)) return "[ERROR] '" + columnName + "' not allowed as a column name";
         DBTable table = getTable(tableName);
         if (commandType.equalsIgnoreCase("ADD")) {
             if (!table.addColumn(columnName)) return "[ERROR] The column '" + columnName + "' already exists.";

@@ -1,16 +1,25 @@
 package edu.uob;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class CommandErrorChecker {
     private final String currentDB;
     private final Map<String, DBTable> tables;
+    private final List<String> reserved_words = Arrays.asList(
+            "USE", "CREATE", "DATABASE", "TABLE", "DROP",
+            "ALTER", "INSERT", "INTO", "VALUES", "DELETE",
+            "FROM", "UPDATE", "SET", "SELECT", "JOIN", "ON",
+            "WHERE", "AND", "OR", "NULL", "TRUE", "FALSE"
+    );
 
     public CommandErrorChecker(String currentDB, Map<String, DBTable> tables) {
         this.currentDB = currentDB;
         this.tables = tables;
     }
+
+    public boolean isReservedWord(String word) { return reserved_words.contains(word.toUpperCase()); }
 
     public String validateDatabaseSelected() {
         if (currentDB == null) return "[ERROR] No database selected. Type 'USE [DBName];' to select a database.";
