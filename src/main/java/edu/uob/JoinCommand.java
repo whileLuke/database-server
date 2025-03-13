@@ -7,23 +7,23 @@ import java.util.List;
 public class JoinCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.validateDatabaseSelected();
+        String error = errorChecker.checkIfDatabaseSelected();
         if (error != null) return error;
         if (tableNames.size() != 2) return "[ERROR] The JOIN command needs two table names.";
         String table1Name = tableNames.get(0).toLowerCase();
         String table2Name = tableNames.get(1).toLowerCase();
-        error = errorChecker.validateTableExists(table1Name);
+        error = errorChecker.checkIfTableExists(table1Name);
         if (error != null) return error;
-        error = errorChecker.validateTableExists(table2Name);
+        error = errorChecker.checkIfTableExists(table2Name);
         if (error != null) return error;
         DBTable table1 = getTable(table1Name);
         DBTable table2 = getTable(table2Name);
         if (columnNames.size() != 2) return "[ERROR] The JOIN command needs two column names";
         String column1 = columnNames.get(0);
         String column2 = columnNames.get(1);
-        error = errorChecker.validateColumnExists(table1, column1);
+        error = errorChecker.checkIfColumnExists(table1, column1);
         if (error != null) return error;
-        error = errorChecker.validateColumnExists(table2, column2);
+        error = errorChecker.checkIfColumnExists(table2, column2);
         if (error != null) return error;
         TableQuery tableQuery = new TableQuery(table1);
         List<List<String>> joinResult = tableQuery.joinWith(table2, column1, column2);

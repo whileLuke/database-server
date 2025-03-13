@@ -5,16 +5,16 @@ import java.io.IOException;
 public class AlterCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.validateDatabaseSelected();
+        String error = errorChecker.checkIfDatabaseSelected();
         if (error != null) return error;
         if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null){
             return "[ERROR] Incorrect ALTER command - either no table name, column names or alteration type provided.";
         }
         String tableName = tableNames.get(0).toLowerCase();
-        error = errorChecker.validateTableExists(tableName);
+        error = errorChecker.checkIfTableExists(tableName);
         if (error != null) return error;
         String columnName = columnNames.get(0);
-        error = errorChecker.validateNotIDColumn(columnName);
+        error = errorChecker.checkIfIDColumn(columnName);
         if (error != null) return error;
         if (errorChecker.isReservedWord(columnName)) return "[ERROR] '" + columnName + "' not allowed as a column name";
         DBTable table = getTable(tableName);

@@ -6,14 +6,14 @@ import java.util.List;
 public class InsertCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.validateDatabaseSelected();
+        String errorMessage = errorChecker.checkIfDatabaseSelected();
         if (errorMessage != null) return errorMessage;
-        errorMessage = errorChecker.validateTableNameProvided(tableNames);
+        errorMessage = errorChecker.checkIfTableNameProvided(tableNames);
         if (errorMessage != null) return errorMessage;
-        errorMessage = errorChecker.validateValuesNotEmpty(values);
+        errorMessage = errorChecker.checkIfValuesEmpty(values);
         if (errorMessage != null) return errorMessage;
         String tableName = tableNames.get(0).toLowerCase();
-        errorMessage = errorChecker.validateTableExists(tableName);
+        errorMessage = errorChecker.checkIfTableExists(tableName);
         if (errorMessage != null) return errorMessage;
         DBTable table = getTable(tableName);
         List<String> processedValues = processValues(values);

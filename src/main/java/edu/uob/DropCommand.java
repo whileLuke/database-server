@@ -7,10 +7,10 @@ public class DropCommand extends DBCommand {
     @Override
     public String query() throws IOException {
         if (!tableNames.isEmpty()) {
-            String errorMessage = errorChecker.validateDatabaseSelected();
+            String errorMessage = errorChecker.checkIfDatabaseSelected();
             if (errorMessage != null) return errorMessage;
             String tableName = tableNames.get(0).toLowerCase();
-            errorMessage = errorChecker.validateTableExists(tableName);
+            errorMessage = errorChecker.checkIfTableExists(tableName);
             if (errorMessage != null) return errorMessage;
             File tableFile = new File(server.getStorageFolderPath() + File.separator + currentDB, tableName + ".tab");
             if (tableFile.delete()) {
@@ -22,7 +22,7 @@ public class DropCommand extends DBCommand {
             }
         }
         else if (DBName != null) {
-            String errorMessage = errorChecker.validateDatabaseNameProvided(DBName);
+            String errorMessage = errorChecker.checkIfDBNameProvided(DBName);
             if (errorMessage != null) return errorMessage;
             if (server.deleteDatabase(DBName)) {
                 return "[OK] Dropped database '" + DBName + "'.";

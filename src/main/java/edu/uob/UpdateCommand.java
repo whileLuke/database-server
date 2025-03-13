@@ -21,12 +21,12 @@ public class UpdateCommand extends DBCommand {
     }
 
     private String validateUpdateCommand() {
-        String error = errorChecker.validateDatabaseSelected();
+        String error = errorChecker.checkIfDatabaseSelected();
         if (error != null) return error;
-        error = errorChecker.validateTableNameProvided(tableNames);
+        error = errorChecker.checkIfTableNameProvided(tableNames);
         if (error != null) return error;
         String tableName = tableNames.get(0).toLowerCase();
-        error = errorChecker.validateTableExists(tableName);
+        error = errorChecker.checkIfTableExists(tableName);
         if (error != null) return error;
         if (columnNames.isEmpty() || values.isEmpty()) { //Should this be using more of my error checking class?
             return "[ERROR] UPDATE needs at least one column name and at least one value.";
@@ -41,9 +41,9 @@ public class UpdateCommand extends DBCommand {
 
     private String validateColumns(DBTable table) {
         for (String columnName : columnNames) {
-            String error = errorChecker.validateColumnExists(table, columnName);
+            String error = errorChecker.checkIfColumnExists(table, columnName);
             if (error != null) return error;
-            error = errorChecker.validateNotIDColumn(columnName);
+            error = errorChecker.checkIfIDColumn(columnName);
             if (error != null) return error;
         }
         return null;
@@ -51,7 +51,7 @@ public class UpdateCommand extends DBCommand {
 
     private int updateMatchingRows(DBTable table) {
         List<List<String>> rows = table.getRows();
-        List<String> columns = table.getColumns();
+        List<String> columns = table.getColumnsLowerCase();
         List<String> tokens = tokeniseConditions(conditions);
         ConditionParser parser = new ConditionParser(tokens);
         ConditionNode conditionTree = parser.parse();

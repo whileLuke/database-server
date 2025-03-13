@@ -33,7 +33,7 @@ public class ComparatorCondition extends ConditionNode {
                 default -> false;
             };
         } catch (NumberFormatException ignored) {
-            return switch (comparator) {
+            return switch (comparator.toUpperCase()) {
                 case "==" -> rowValue.equals(conditionValue);
                 case "!=" -> !rowValue.equals(conditionValue);
                 case "LIKE" -> rowValue.contains(conditionValue);

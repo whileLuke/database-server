@@ -7,40 +7,45 @@ import java.util.List;
 public class SelectCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.validateDatabaseSelected();
+        String error = errorChecker.checkIfDatabaseSelected();
         if (error != null) return error;
-        error = errorChecker.validateTableNameProvided(tableNames);
+
+        error = errorChecker.checkIfTableNameProvided(tableNames);
         if (error != null) return error;
+
         String tableName = tableNames.get(0).toLowerCase();
-        error = errorChecker.validateTableExists(tableName);
+        error = errorChecker.checkIfTableExists(tableName);
         if (error != null) return error;
+
         DBTable table = getTable(tableName);
         List<String> selectedColumns;
-        if (columnNames.contains("*")) selectedColumns = table.getColumns();
+
+        if (columnNames.contains("*")) selectedColumns = table.getColumnsLowerCase();
         else {
             selectedColumns = new ArrayList<>(columnNames);
             for (String column : selectedColumns) {
-                error = errorChecker.validateColumnExists(table, column);
+                error = errorChecker.checkIfColumnExists(table, column.toLowerCase());
                 if (error != null) return error;
             }
         }
-        List<List<String>> filteredRows;
+        List<List<String>> matchingRows;
         TableQuery tableQuery = new TableQuery(table);
+
         if (conditions.isEmpty()) {
             List<Integer> columnIndexes = new ArrayList<>();
             for (String col : selectedColumns) columnIndexes.add(table.getColumnIndex(col));
-            filteredRows = new ArrayList<>();
-            extractSelectedData(table, filteredRows, columnIndexes);
-        } else filteredRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
-        String formattedRows = formatRows(selectedColumns, filteredRows);
-        return "[OK]\n" + formattedRows;
+            matchingRows = new ArrayList<>();
+            getSelectedData(table, matchingRows, columnIndexes);
+        } else matchingRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
+        String matchedRows = formatRows(selectedColumns, matchingRows);
+        return "[OK]\n" + matchedRows;
     }
 
-    private void extractSelectedData(DBTable table, List<List<String>> filteredRows, List<Integer> columnIndexes) {
+    private void getSelectedData(DBTable table, List<List<String>> matchingRows, List<Integer> columnIndexes) {
         for (List<String> row : table.getRows()) {
-            List<String> filteredRow = new ArrayList<>();
-            for (int index : columnIndexes) filteredRow.add(row.get(index));
-            filteredRows.add(filteredRow);
+            List<String> matchingRow = new ArrayList<>();
+            for (int index : columnIndexes) matchingRow.add(row.get(index));
+            matchingRows.add(matchingRow);
         }
     }
 
@@ -48,6 +53,7 @@ public class SelectCommand extends DBCommand {
         StringBuilder formattedRows = new StringBuilder();
         formattedRows.append(String.join("\t", columns));
         formattedRows.append("\n");
+
         for (List<String> row : rows) {
             formattedRows.append(String.join("\t", row));
             formattedRows.append("\n");

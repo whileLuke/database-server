@@ -18,7 +18,13 @@ public class DBTable {
 
     public String getName() { return tableName; }
 
-    public List<String> getColumns() { return new ArrayList<>(columns); }
+    public List<String> getColumns() { return new ArrayList<>(columns); } //TO LOWERCASE.
+
+    public List<String> getColumnsLowerCase() {
+        List<String> lowerCaseColumns = new ArrayList<>();
+        for (String column : columns) lowerCaseColumns.add(column.toLowerCase());
+        return lowerCaseColumns;
+    }
 
     public List<List<String>> getRows() { return rows; }
 

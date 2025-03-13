@@ -8,17 +8,17 @@ import java.util.List;
 public class DeleteCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.validateDatabaseSelected();
+        String errorMessage = errorChecker.checkIfDatabaseSelected();
         if (errorMessage != null) return errorMessage;
         //error = errorChecker.validateTableNameProvided(tableNames);
         //if (error != null) return error;
         String tableName = tableNames.get(0).toLowerCase();
-        errorMessage = errorChecker.validateTableExists(tableName);
+        errorMessage = errorChecker.checkIfTableExists(tableName);
         if (errorMessage != null) return errorMessage;
         DBTable table = getTable(tableName);
         if (conditions.isEmpty()) return "[ERROR] DELETE commands require a WHERE condition.";
         List<List<String>> rows = table.getRows();
-        List<String> columns = table.getColumns();
+        List<String> columns = table.getColumnsLowerCase();
         List<String> tokens = tokeniseConditions(conditions);
         ConditionParser parser = new ConditionParser(tokens);
         ConditionNode conditionTree = parser.parse();
