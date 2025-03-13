@@ -1,32 +1,31 @@
 package edu.uob;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class AlterCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
-        //loadTables(currentDB);
-        if (currentDB == null) return "[ERROR] No database selected. Use 'USE database;' to select a database first.";
-        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) {
-            return "[ERROR] Invalid ALTER TABLE command format.";
+    public String query() throws IOException {
+        String error = errorChecker.validateDatabaseSelected();
+        if (error != null) return error;
+        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null){
+            return "[ERROR] Incorrect ALTER command - either no table name, column names or alteration type provided.";
         }
-        String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/; // Only one table name is allowed
+        String tableName = tableNames.get(0).toLowerCase();
+        error = errorChecker.validateTableExists(tableName);
+        if (error != null) return error;
         String columnName = columnNames.get(0);
-        if (Objects.equals(columnName, "id")) return "[ERROR] Cannot alter the ID column.";
-        Table table = tables.get(tableName);
-        if (table == null) return "[ERROR] Table '" + tableName + "' does not exist in the current database.";
-        boolean success;
+        error = errorChecker.validateNotIDColumn(columnName);
+        if (error != null) return error;
+        if (errorChecker.isReservedWord(columnName)) return "[ERROR] '" + columnName + "' not allowed as a column name";
+        DBTable table = getTable(tableName);
         if (commandType.equalsIgnoreCase("ADD")) {
-            success = table.addColumn(columnName);
-            if (!success) return "[ERROR] Column '" + columnName + "' already exists in table '" + tableName + "'.";
+            if (!table.addColumn(columnName)) return "[ERROR] The column '" + columnName + "' already exists.";
         }
         else if (commandType.equalsIgnoreCase("DROP")) {
-            success = table.dropColumn(columnName);
-            if (!success) return "[ERROR] Column '" + columnName + "' does not exist in table '" + tableName + "'.";
+            if (!table.dropColumn(columnName)) return "[ERROR] The column - '" + columnName + "' does not exist.";
         }
-        else return "[ERROR] Unknown ALTER operation: " + commandType + ". Please use either ADD or DROP.";
-        if (saveCurrentDB()) return "[OK] Table '" + tableName + "' altered successfully.";
-        else return "[ERROR] Failed to save altered table to the disk.";
+        else return ("[ERROR] Your ALTER command must specify either 'ADD' or 'DROP'");
+        if (saveCurrentDB()) return "[OK] You have successfully altered the table " + tableName + ".";
+        else return "[ERROR] The altered table could not be saved to your file system";
     }
 }

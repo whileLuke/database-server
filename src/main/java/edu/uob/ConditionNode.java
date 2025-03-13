@@ -7,39 +7,27 @@ public abstract class ConditionNode {
 }
 
 class SimpleCondition extends ConditionNode {
-    private final String column;
-    private final String operator;
+    private final String columnName;
+    private final String comparator;
     private final String value;
 
-    public SimpleCondition(String column, String operator, String value) {
-        this.column = column;
-        this.operator = operator;
+    public SimpleCondition(String columnName, String comparator, String value) {
+        this.columnName = columnName;
+        this.comparator = comparator;
         this.value = value;
     }
 
     @Override
     boolean evaluate(List<String> row, List<String> columns) {
-        int index = columns.indexOf(column);
-        if (index == -1) {
-            System.out.println("[ERROR] Column '" + column + "' not found in table!");
-            return false;
-        }
-
+        int index = columns.indexOf(columnName);
+        if (index == -1) return false;
         String rowValue = row.get(index).trim();
-        System.out.println("[DEBUG] Evaluating condition: Column = " + column + ", Row Value = '" + rowValue + "', Operator = '" + operator + "', Condition Value = '" + value + "'");
-
         String conditionValue = value;
-        if ((value.startsWith("\"") && value.endsWith("\"")) ||
-                (value.startsWith("'") && value.endsWith("'"))) {
-            conditionValue = value.substring(1, value.length() - 1).trim();
-        }
-
+        if (isInQuotes(value)) conditionValue = value.substring(1, value.length() - 1).trim();
         try {
             double rowNum = Double.parseDouble(rowValue);
             double compNum = Double.parseDouble(conditionValue);
-            System.out.println("[DEBUG] Numeric Comparison: " + rowNum + " " + operator + " " + compNum);
-
-            return switch (operator) {
+            return switch (comparator) {
                 case ">" -> rowNum > compNum;
                 case ">=" -> rowNum >= compNum;
                 case "<" -> rowNum < compNum;
@@ -49,15 +37,17 @@ class SimpleCondition extends ConditionNode {
                 default -> false;
             };
         } catch (NumberFormatException ignored) {
-            System.out.println("[DEBUG] String Comparison: '" + rowValue + "' " + operator + " '" + conditionValue + "'");
-
-            return switch (operator) {
+            return switch (comparator) {
                 case "==" -> rowValue.equals(conditionValue);
                 case "!=" -> !rowValue.equals(conditionValue);
                 case "LIKE" -> rowValue.contains(conditionValue);
                 default -> false;
             };
         }
+    }
+
+    boolean isInQuotes(String value){
+        return (value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"));
     }
 }
 
@@ -79,17 +69,5 @@ class LogicalCondition extends ConditionNode {
             case "OR" -> left.evaluate(row, columns) || right.evaluate(row, columns);
             default -> false;
         };
-    }
-}
-
-class NotCondition extends ConditionNode {
-    private final ConditionNode condition;
-    public NotCondition(ConditionNode condition) {
-        this.condition = condition;
-    }
-
-    @Override
-    boolean evaluate(List<String> row, List<String> columns) {
-        return !condition.evaluate(row, columns);
     }
 }

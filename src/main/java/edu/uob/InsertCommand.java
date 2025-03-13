@@ -1,58 +1,33 @@
 package edu.uob;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-//INSERT no longer works on a restart. can only insert into a recently created table.
-//ONLY I8SSUE IS BC LOADTABLES IS UNCOMMENTED I CAN PROB INSERT INTO ANY TABLE EVEN FROM DIFF DBS
+import java.util.List;
+
 public class InsertCommand extends DBCommand {
     @Override
-    public String query(DBServer server) throws IOException {
-        //loadTables(currentDB);
-        if (tableNames.isEmpty() || values.isEmpty()) {
-            return "[ERROR] Table name or values for insertion are missing.";
-        }
-        String tableName = tableNames.get(0).toLowerCase() /*+ ".tab"*/;
-        //REDO THIS. LIKE HOW I REDID DROP TABLE.
-        File tableFile = new File(storageFolderPath + File.separator + currentDB, tableName.toLowerCase() + ".tab");
-        Table table = tables.get(tableName);
-        if (table == null) {
-            return "[ERROR] Table '" + tableName + "' does not exist.";
-        }
-        //server.tables.put(tableName, table);
-        //server.tables.get(tableName);
-        //REDO THIS. LIKE HOW I REDID DROP TABLE.
-        //basically server.tables is NEVERRRR containing tables annoyingly
-        //if (!tableFile.exists()) {
-        //   return "[ERROR] Table '" + tableName + "' does not exist.";
-        //}
+    public String query() throws IOException {
+        String errorMessage = errorChecker.validateDatabaseSelected();
+        if (errorMessage != null) return errorMessage;
+        errorMessage = errorChecker.validateTableNameProvided(tableNames);
+        if (errorMessage != null) return errorMessage;
+        errorMessage = errorChecker.validateValuesNotEmpty(values);
+        if (errorMessage != null) return errorMessage;
+        String tableName = tableNames.get(0).toLowerCase();
+        errorMessage = errorChecker.validateTableExists(tableName);
+        if (errorMessage != null) return errorMessage;
+        DBTable table = getTable(tableName);
+        List<String> processedValues = processValues(values);
         int id = table.generateNextID();
-        //int id = server.tables.get(0);
-        for (int i = 0; i < values.size(); i++) {
-            values.set(i, removeQuotes(values.get(i))); // Replace each value in place
-        }
-        ArrayList<String> rowValues = new ArrayList<>(values);
-        /*if (!table.getColumns().get(0).equalsIgnoreCase("id")) {
-            rowValues.add(0, String.valueOf(id));
-        }*/
-        rowValues.add(0, String.valueOf (id));
-        if (table.addRow(rowValues)) {
-            saveCurrentDB();
-            return "[OK] 1 row inserted into '" + tableName + "'.";
+        processedValues.add(0, String.valueOf(id));
+        if (table.addRow(processedValues)) {
+            if (saveCurrentDB()) {
+                return "[OK] 1 row inserted into '" + tableName + "'.";
+            } else {
+                return "[ERROR] Failed to save database after insertion.";
+            }
         } else {
             return "[ERROR] Failed to insert into '" + tableName + "'. Column count mismatch: expected " +
-                    (table.getColumns().size() - 1) + " columns, got " + (rowValues.size() - 1) + " values.";
+                    (table.getColumns().size() - 1) + " columns, got " + (processedValues.size() - 1) + " values.";
         }
-    }
-
-    private String removeQuotes(String value) {
-        if (value == null) return "";
-        if ((value.startsWith("'") && value.endsWith("'")) ||
-                (value.startsWith("\"") && value.endsWith("\""))) {
-            return value.substring(1, value.length() - 1);
-        }
-        return value;
     }
 }
-
-

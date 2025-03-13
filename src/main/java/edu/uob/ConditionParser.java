@@ -6,43 +6,26 @@ public class ConditionParser {
     private final List<String> tokens;
     private int index = 0;
 
-    public ConditionParser(List<String> tokens) {
-        this.tokens = tokens;
-    }
+    public ConditionParser(List<String> tokens) { this.tokens = tokens; }
 
     public ConditionNode parse() {
-        if (tokens.isEmpty()) {
-            return null;
-        }
+        if (tokens.isEmpty()) return null;
         return parseExpression();
     }
 
     private ConditionNode parseExpression() {
-        ConditionNode left = parseTerm();
-        while (index < tokens.size() && tokens.get(index).equalsIgnoreCase("OR")) {
+        ConditionNode left = parseParenthesis();
+        while (index < tokens.size()) {
+            String operator = tokens.get(index);
+            if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) break;
             index++;
-            ConditionNode right = parseTerm();
-            left = new LogicalCondition("OR", left, right);
+            ConditionNode right = parseParenthesis();
+            left = new LogicalCondition(operator.toUpperCase(), left, right);
         }
         return left;
     }
 
-    private ConditionNode parseTerm() {
-        ConditionNode left = parseFactor();
-        while (index < tokens.size() && tokens.get(index).equalsIgnoreCase("AND")) {
-            index++;
-            ConditionNode right = parseFactor();
-            left = new LogicalCondition("AND", left, right);
-        }
-        return left;
-    }
-
-    private ConditionNode parseFactor() {
-        if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("NOT")) {
-            index++;
-            return new NotCondition(parseFactor());
-        }
-
+    private ConditionNode parseParenthesis() {
         if (index < tokens.size() && tokens.get(index).equals("(")) {
             index++;
             ConditionNode node = parseExpression();
@@ -52,26 +35,21 @@ public class ConditionParser {
             }
             throw new RuntimeException("Missing closing parenthesis");
         }
-
         return parseComparison();
     }
 
     private ConditionNode parseComparison() {
-        if (index + 2 >= tokens.size()) {
-            throw new RuntimeException("Incomplete comparison at index " + index);
-        }
-
-        String column = tokens.get(index++);
-        String operator = tokens.get(index++);
-        String value = tokens.get(index++);
-
+        if (index + 2 >= tokens.size()) return null;
+        String columnName = tokens.get(index);
+        index++;
+        String operator = tokens.get(index);
+        index++;
+        String value = tokens.get(index);
+        index++;
         if (value.equalsIgnoreCase("NULL")) {
-            if (operator.equals("=")) {
-                return new NullCondition(column, true);
-            } else if (operator.equals("!=") || operator.equals("<>")) {
-                return new NullCondition(column, false);
-            }
+            if (operator.equals("==")) return new NullCondition(columnName, true);
+            else if (operator.equals("!=")) return new NullCondition(columnName, false);
         }
-        return new SimpleCondition(column, operator, value);
+        return new SimpleCondition(columnName, operator, value);
     }
 }
