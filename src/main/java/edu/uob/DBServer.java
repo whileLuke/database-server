@@ -49,22 +49,11 @@ public class DBServer {
     * <p>This method handles all incoming DB commands and carries out the required actions.
     */
     public String handleCommand(String command) throws IOException {
-        if (command == null || command.isEmpty()) {
-            return DBResponse.error("Empty command.").toString();
-        }
-
-        if (!command.endsWith(";")) {
-            return DBResponse.error("Command must end with a semicolon (';').").toString();
-        }
-
+        if (command == null || command.isEmpty()) return "[ERROR] Cannot have an empty command.";
+        if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (';').";
         List<String> tokens = tokeniser.tokenise(command);
         CommandParser parser = new CommandParser(this);
-        try {
-            DBResponse response = parser.parseCommand(tokens);
-            return response.toString();
-        } catch (Exception e) {
-            return DBResponse.error("Command processing error: " + e.getMessage()).toString();
-        }
+        return parser.parseCommand(tokens); //Might need an error message or not here.
     }
 
     public boolean saveCurrentDB() throws IOException {
