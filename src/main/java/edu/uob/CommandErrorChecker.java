@@ -21,6 +21,11 @@ public class CommandErrorChecker {
 
     public boolean isReservedWord(String word) { return reserved_words.contains(word.toUpperCase()); }
 
+    public String CheckIfReservedWord(String word) {
+        if (isReservedWord(word)) return "[ERROR] You cannot use reserved word '" + word + "' .";
+        return null;
+    }
+
     public String validateDatabaseSelected() {
         if (currentDB == null) return "[ERROR] No database selected. Type 'USE [DBName];' to select a database.";
         return null;

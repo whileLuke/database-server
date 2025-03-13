@@ -52,18 +52,6 @@ public abstract class DBCommand {
         return tables.get(tableName.toLowerCase());
     }
 
-    /*protected DBResponse validateDatabaseSelected() {
-        return CommandErrorChecker.validateDatabaseSelected(currentDB);
-    }
-
-    protected DBResponse validateTableExists(String tableName) {
-        return CommandErrorChecker.validateTableExists(tables, tableName.toLowerCase());
-    }
-
-    protected DBResponse validateTableNameProvided() {
-        return CommandErrorChecker.validateTableNameProvided(tableNames);
-    }*/
-
     protected boolean saveCurrentDB() throws IOException {
         return server.saveCurrentDB();
     }

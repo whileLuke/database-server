@@ -10,13 +10,11 @@ public class CreateTableCommand extends DBCommand {
         errorMessage = errorChecker.validateTableNameProvided(tableNames);
         if (errorMessage != null) return errorMessage;
         String tableName = tableNames.get(0).toLowerCase();
-        if (errorChecker.isReservedWord(tableName)) {
-            return "[ERROR] Cannot use reserved word '" + tableName + "' as a table name.";
-        }
+        errorMessage = errorChecker.CheckIfReservedWord(tableName);
+        if (errorMessage != null) return errorMessage;
         for (String columnName : columnNames) {
-            if (errorChecker.isReservedWord(columnName)) {
-                return "[ERROR] Cannot use reserved word '" + columnName + "' as a column name.";
-            }
+            errorMessage = errorChecker.CheckIfReservedWord(columnName);
+            if (errorMessage != null) return errorMessage;
         }
         DBTable newTable = new DBTable(tableName, columnNames);
         tables.put(tableName, newTable);

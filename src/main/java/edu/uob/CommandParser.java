@@ -67,7 +67,7 @@ public class CommandParser {
         int end = tokens.lastIndexOf(")");
         if (start < 0 || end < 0 || end <= start) return null;
         if (!parseTableColumns(start, end, cmd)) return null;
-        server.getTables().put(tableName, new DBTable(tableName, cmd.columnNames));
+        //server.getTables().put(tableName, new DBTable(tableName, cmd.columnNames));
         return cmd;
     }
 
@@ -104,7 +104,6 @@ public class CommandParser {
         if (tokens.size() < 6 || !endsWithSemicolon()) return null;
         String operation = tokens.get(3).toUpperCase();
         if (!(operation.equals("ADD") || operation.equals("DROP"))) return null;
-
         AlterCommand cmd = new AlterCommand();
         cmd.tableNames.add(tokens.get(2));
         cmd.commandType = operation;
@@ -113,104 +112,98 @@ public class CommandParser {
     }
 
     private DBCommand parseInsert() {
-        if (tokens.size() < 5 || !endsWithSemicolon() || !tokens.get(3).equalsIgnoreCase("values")) return null;
-
+        if (tokens.size() < 5 || !endsWithSemicolon() ||
+                !tokens.get(3).equalsIgnoreCase("values")) return null;
         InsertCommand cmd = new InsertCommand();
         cmd.tableNames.add(tokens.get(2));
+        getValuesFromTokens(cmd);
+        return cmd;
+    }
 
-        for (int i = 4; i < tokens.size() - 1; i++) { // -1 to skip final semicolon
+    private void getValuesFromTokens(InsertCommand cmd) {
+        for (int i = 4; i < tokens.size() - 1; i++) {
             String token = tokens.get(i).replaceAll("[(),]", "").trim();
             if (!token.isEmpty()) cmd.values.add(token);
         }
-        return cmd;
     }
 
     private DBCommand parseSelect() {
         if (tokens.size() < 4 || !endsWithSemicolon()) return null;
-
         SelectCommand cmd = new SelectCommand();
-        int index = 1;
-        while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("FROM")) {
-            cmd.columnNames.add(tokens.get(index++));
-            if (index < tokens.size() && tokens.get(index).equals(",")) index++;
-        }
-        if (index >= tokens.size()) return null;
-        cmd.tableNames.add(tokens.get(++index));
-
-        parseOptionalCondition(cmd, index + 1);
+        int index = getColumnsFromTokens(cmd);
+        parseWhereClause(cmd, index + 1);
         return cmd;
     }
 
-    private void parseOptionalCondition(DBCommand cmd, int startId) {
-        if (startId < tokens.size() && tokens.get(startId).equalsIgnoreCase("WHERE")) {
-            List<String> conditions = new ArrayList<>();
-            StringBuilder condition = new StringBuilder();
-            boolean inQuotes = false;
-
-            for (int i = startId + 1; i < tokens.size(); i++) {
-                String token = tokens.get(i);
-                if (i == tokens.size() - 1 && token.endsWith(";")) {
-                    token = token.substring(0, token.length() - 1);
-                }
-
-                if (token.startsWith("\"") && !token.endsWith("\"") || token.startsWith("'") && !token.endsWith("'")) {
-                    inQuotes = true;
-                } else if ((token.endsWith("\"") && !token.startsWith("\"")) || (token.endsWith("'") && !token.startsWith("'"))) {
-                    inQuotes = false;
-                }
-
-                if (!inQuotes && (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR"))) {
-                    if (!condition.isEmpty()) {
-                        conditions.add(condition.toString().trim());
-                        condition.setLength(0); // Clear for next condition
-                    }
-                    condition.append(token).append(" ");
-                } else {
-                    condition.append(token).append(" ");
-                }
-            }
-
-            if (!condition.isEmpty()) {
-                conditions.add(condition.toString().trim()); // Add last condition
-            }
-
-            System.out.println("[DEBUG] Extracted WHERE conditions: " + conditions);
-
-            if (cmd instanceof SelectCommand) {
-                ((SelectCommand) cmd).setConditions(conditions);
-            } else if (cmd instanceof UpdateCommand) {
-                ((UpdateCommand) cmd).setConditions(conditions);
-            } else if (cmd instanceof DeleteCommand) {
-                ((DeleteCommand) cmd).setConditions(conditions);
-            }
+    private int getColumnsFromTokens(SelectCommand cmd) {
+        int index = 1;
+        while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("FROM")) {
+            cmd.columnNames.add(tokens.get(index));
+            index++;
+            if (index < tokens.size() && tokens.get(index).equals(",")) index++;
         }
+        index++;
+        cmd.tableNames.add(tokens.get(index));
+        return index;
+    }
+
+    private void parseWhereClause(DBCommand cmd, int index) {
+        if (index < tokens.size() && tokens.get(index).equalsIgnoreCase("WHERE")) {
+            List<String> conditions = getConditions(index + 1);
+            cmd.setConditions(conditions);
+        }
+    }
+
+    private List<String> getConditions(int index) {
+        List<String> conditions = new ArrayList<>();
+        StringBuilder condition = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = index; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            if (i == tokens.size() - 1 && token.endsWith(";")) token = token.substring(0, token.length() - 1);
+            if (token.startsWith("\"") && !token.endsWith("\"") || token.startsWith("'") && !token.endsWith("'")) {
+                inQuotes = true;
+            } else if ((token.endsWith("\"") && !token.startsWith("\"")) ||
+                    (token.endsWith("'") && !token.startsWith("'"))) inQuotes = false;
+            if (!inQuotes && (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR"))) {
+                if (!condition.isEmpty()) {
+                    conditions.add(condition.toString().trim());
+                    condition.setLength(0);
+                }
+                condition.append(token).append(" ");
+            } else condition.append(token).append(" ");
+        }
+        if (!condition.isEmpty()) conditions.add(condition.toString().trim());
+        return conditions;
     }
 
     private DBCommand parseUpdate() {
         if (tokens.size() < 7 || !tokens.get(2).equalsIgnoreCase("SET")) return null;
-
         UpdateCommand cmd = new UpdateCommand();
         cmd.tableNames.add(tokens.get(1));
-
-        int i = 3;
-        while (i < tokens.size() && !tokens.get(i).equalsIgnoreCase("WHERE")) {
-            cmd.columnNames.add(tokens.get(i));
-            if (!tokens.get(++i).equals("=")) return null;
-            cmd.values.add(tokens.get(++i).replace("'", ""));
-            if (tokens.get(++i).equals(",")) i++;
-        }
-
-        parseOptionalCondition(cmd, i);
+        int i = parseSetClause(cmd);
+        if (i == -1) return null;
+        parseWhereClause(cmd, i);
         return cmd;
+    }
+
+    private int parseSetClause(UpdateCommand cmd) {
+        int index = 3;
+        while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("WHERE")) {
+            cmd.columnNames.add(tokens.get(index));
+            if (++index >= tokens.size() || !tokens.get(index).equals("=")) return -1;
+            cmd.values.add(tokens.get(++index).replace("'", ""));
+            if (++index >= tokens.size()) return -1;
+            if (tokens.get(index).equals(",")) index++;
+        }
+        return index;
     }
 
     private DBCommand parseJoin() {
         if (tokens.size() != 9) return null;
-
         JoinCommand cmd = new JoinCommand();
-        if (!tokens.get(2).equalsIgnoreCase("AND") || !tokens.get(4).equalsIgnoreCase("ON") || !tokens.get(6).equalsIgnoreCase("AND"))
-            return null;
-
+        if (!tokens.get(2).equalsIgnoreCase("AND") || !tokens.get(4).equalsIgnoreCase("ON") ||
+                !tokens.get(6).equalsIgnoreCase("AND")) return null;
         cmd.tableNames.add(tokens.get(1));
         cmd.tableNames.add(tokens.get(3));
         cmd.columnNames.add(tokens.get(5));
@@ -222,7 +215,7 @@ public class CommandParser {
         if (tokens.size() < 5 || !tokens.get(1).equalsIgnoreCase("FROM")) return null;
         DeleteCommand cmd = new DeleteCommand();
         cmd.tableNames.add(tokens.get(2));
-        parseOptionalCondition(cmd, 3);
+        parseWhereClause(cmd, 3);
         return cmd;
     }
 }
