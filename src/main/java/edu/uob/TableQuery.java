@@ -1,7 +1,8 @@
 // TableQuery class for selection/filtering operations
 package edu.uob;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TableQuery {
     private final DBTable table;
@@ -33,7 +34,7 @@ public class TableQuery {
         List<List<String>> filteredRows = new ArrayList<>();
         List<String> columns = table.getColumns();
         for (List<String> row : table.getRows()) {
-            if (conditionTree == null || conditionTree.evaluate(row, columns)) {
+            if (conditionTree == null || conditionTree.evaluateCondition(row, columns)) {
                 List<String> filteredRow = new ArrayList<>();
                 for (int index : columnIndexes) filteredRow.add(row.get(index));
                 filteredRows.add(filteredRow);

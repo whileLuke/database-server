@@ -1,0 +1,2 @@
+id	intValue	negInt	posInt	floatValue	negFloat	posFloat	boolTrue	boolFalse	quotedString	specialChars	nullValue
+1	42	-42	42	3.14	-3.14	3.14	TRUE	FALSE	Single quote inside string	Special @#$%^&* chars	NULL

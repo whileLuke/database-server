@@ -1,6 +1,6 @@
 package edu.uob;
 
-import java.util.*;
+import java.util.List;
 
 public class ConditionParser {
     private final List<String> tokens;
@@ -20,7 +20,7 @@ public class ConditionParser {
             if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) break;
             index++;
             ConditionNode right = parseParenthesis();
-            left = new LogicalCondition(operator.toUpperCase(), left, right);
+            left = new BoolOperatorCondition(operator.toUpperCase(), left, right);
         }
         return left;
     }
@@ -50,6 +50,6 @@ public class ConditionParser {
             if (operator.equals("==")) return new NullCondition(columnName, true);
             else if (operator.equals("!=")) return new NullCondition(columnName, false);
         }
-        return new SimpleCondition(columnName, operator, value);
+        return new ComparatorCondition(columnName, operator, value);
     }
 }

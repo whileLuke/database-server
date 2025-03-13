@@ -1,8 +1,8 @@
 package edu.uob;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.*;
 
 public class DBTable {
     private final List<String> columns;

@@ -1,0 +1,4 @@
+id	userId	roleName	permissions
+1	1	Admin	all
+2	2	Editor	readwrite
+3	3	Viewer	read

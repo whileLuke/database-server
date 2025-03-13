@@ -26,7 +26,7 @@ public class DeleteCommand extends DBCommand {
         Iterator<List<String>> iterator = rows.iterator();
         while (iterator.hasNext()) {
             List<String> row = iterator.next();
-            boolean matches = conditionTree.evaluate(row, columns);
+            boolean matches = conditionTree.evaluateCondition(row, columns);
             if (matches) iterator.remove();
         }
         int deletedRows = initialRowCount - rows.size();

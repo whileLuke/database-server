@@ -12,7 +12,7 @@ public class NullCondition extends ConditionNode {
     }
 
     @Override
-    public boolean evaluate(List<String> row, List<String> columns) {
+    public boolean evaluateCondition(List<String> row, List<String> columns) {
         int index = columns.indexOf(columnName);
         if (index == -1) return false;
         String value = row.get(index);

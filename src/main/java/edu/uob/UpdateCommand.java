@@ -57,7 +57,7 @@ public class UpdateCommand extends DBCommand {
         ConditionNode conditionTree = parser.parse();
         int updatedRowCount = 0;
         for (List<String> row : rows) {
-            if (conditionTree.evaluate(row, columns)) {
+            if (conditionTree.evaluateCondition(row, columns)) {
                 updatedRowCount++;
                 updateRow(row, columns);
             }
