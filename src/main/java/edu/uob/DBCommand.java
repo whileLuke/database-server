@@ -12,33 +12,31 @@ public abstract class DBCommand {
     protected List<String> columnNames = new ArrayList<>();
     protected List<String> values = new ArrayList<>();
     protected List<String> conditions = new ArrayList<>();
-
-    // References to important data from DBServer
     protected String currentDB;
     protected Map<String, DBTable> tables;
     protected DBServer server;
+    protected CommandErrorChecker errorChecker;
 
     public void setServer(DBServer server) {
         this.server = server;
         this.currentDB = server.getCurrentDB();
         this.tables = server.getTables();
+        this.errorChecker = new CommandErrorChecker(currentDB, tables);
     }
 
     public void setConditions(List<String> conditions) {
         this.conditions = conditions;
     }
 
-    public abstract DBResponse query() throws IOException;
+    public abstract String query() throws IOException;
 
-    // Common utility methods
-
-    protected String removeQuotes(String value) {
-        if (value == null) return "";
-        if ((value.startsWith("'") && value.endsWith("'")) ||
-                (value.startsWith("\"") && value.endsWith("\""))) {
-            return value.substring(1, value.length() - 1);
+    protected String removeQuotes(String stringToEdit) {
+        if (stringToEdit == null) return "";
+        if ((stringToEdit.startsWith("'") && stringToEdit.endsWith("'")) ||
+                (stringToEdit.startsWith("\"") && stringToEdit.endsWith("\""))) {
+            return stringToEdit.substring(1, stringToEdit.length() - 1);
         }
-        return value;
+        return stringToEdit;
     }
 
     protected List<String> processValues(List<String> rawValues) {
@@ -54,17 +52,17 @@ public abstract class DBCommand {
         return tables.get(tableName.toLowerCase());
     }
 
-    protected DBResponse validateDatabaseSelected() {
-        return CommandValidator.validateDatabaseSelected(currentDB);
+    /*protected DBResponse validateDatabaseSelected() {
+        return CommandErrorChecker.validateDatabaseSelected(currentDB);
     }
 
     protected DBResponse validateTableExists(String tableName) {
-        return CommandValidator.validateTableExists(tables, tableName.toLowerCase());
+        return CommandErrorChecker.validateTableExists(tables, tableName.toLowerCase());
     }
 
     protected DBResponse validateTableNameProvided() {
-        return CommandValidator.validateTableNameProvided(tableNames);
-    }
+        return CommandErrorChecker.validateTableNameProvided(tableNames);
+    }*/
 
     protected boolean saveCurrentDB() throws IOException {
         return server.saveCurrentDB();

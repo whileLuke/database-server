@@ -6,54 +6,84 @@ import java.util.List;
 
 public class UpdateCommand extends DBCommand {
     @Override
-    public DBResponse query() throws IOException {
-        DBResponse validationResponse;
-        if ((validationResponse = validateDatabaseSelected()) != null) return validationResponse;
-        if ((validationResponse = validateTableNameProvided()) != null) return validationResponse;
-        if ((validationResponse = CommandValidator.validateValuesNotEmpty(values))!= null) return validationResponse;
+    public String query() throws IOException {
+        String error = errorChecker.validateDatabaseSelected();
+        if (error != null) return error;
+
+        error = errorChecker.validateTableNameProvided(tableNames);
+        if (error != null) return error;
 
         String tableName = tableNames.get(0).toLowerCase();
-        if ((validationResponse = validateTableExists(tableName)) != null) return validationResponse;
+
+        error = errorChecker.validateTableExists(tableName);
+        if (error != null) return error;
 
         DBTable table = getTable(tableName);
-        for (String columnName : columnNames) {
-            if ((validationResponse = CommandValidator.validateColumnExists(table, columnName)) != null) return validationResponse;
-            if ((validationResponse = CommandValidator.validateNotIdColumn(columnName)) != null) return validationResponse;
+
+        if (columnNames.isEmpty() || values.isEmpty()) {
+            return "[ERROR] UPDATE requires at least one column and value pair.";
         }
 
-        List<String> processedValues = processValues(values);
-        if (conditions.isEmpty()) return DBResponse.error("UPDATE command needs a WHERE condition.");
+        if (columnNames.size() != values.size()) {
+            return "[ERROR] Column and value counts do not match.";
+        }
+
+        // Validate columns exist and are not ID
+        for (String columnName : columnNames) {
+            error = errorChecker.validateColumnExists(table, columnName);
+            if (error != null) return error;
+
+            error = errorChecker.validateNotIdColumn(columnName);
+            if (error != null) return error;
+        }
 
         try {
+            List<List<String>> rows = table.getRows();
+            List<String> columns = table.getColumns();
+
+            // If no conditions, return error
+            if (conditions.isEmpty()) {
+                return "[ERROR] UPDATE command requires a WHERE condition.";
+            }
+
             List<String> tokens = tokenizeConditions(conditions);
             ConditionParser parser = new ConditionParser(tokens);
             ConditionNode conditionTree = parser.parse();
 
-            List<List<String>> rows = table.getRows();
-            List<String> tableColumns = table.getColumns();
             int updatedRowCount = 0;
 
             for (List<String> row : rows) {
-                if (conditionTree.evaluate(row, tableColumns)) {
-                    for (int i = 0; i < columnNames.size(); i++) {
-                        String columnName = columnNames.get(i);
-                        String newValue = processedValues.get(i);
-                        int columnIndex = table.getColumnIndex(columnName);
+                boolean matches = conditionTree.evaluate(row, columns);
 
-                        if (columnIndex >= 0) {
-                            row.set(columnIndex, newValue);
-                            updatedRowCount++;
-                        }
-                    }
+                if (matches) {
+                    updatedRowCount++;
+                    // Update the matching row
+                    updateRow(row, columns, columnNames, values);
                 }
             }
 
             if (updatedRowCount > 0) {
-                if (saveCurrentDB()) return DBResponse.success(updatedRowCount + " row(s) updated.");
-                else return DBResponse.error("Failed to save database after update.");
-            } else return DBResponse.error("No rows matched the update condition.");
+                if (saveCurrentDB()) {
+                    return "[OK] " + updatedRowCount + " row(s) updated.";
+                } else {
+                    return "[ERROR] Failed to save database after update.";
+                }
+            } else {
+                return "[ERROR] No rows matched the update condition.";
+            }
         } catch (Exception e) {
-            return DBResponse.error("Failed to process update operation: " + e.getMessage());
+            return "[ERROR] Failed to process update operation: " + e.getMessage();
+        }
+    }
+
+    private void updateRow(List<String> row, List<String> columns, List<String> updateColumns, List<String> updateValues) {
+        for (int i = 0; i < updateColumns.size(); i++) {
+            String columnName = updateColumns.get(i);
+            String value = updateValues.get(i);
+            int columnIndex = columns.indexOf(columnName);
+            if (columnIndex >= 0) {
+                row.set(columnIndex, removeQuotes(value));
+            }
         }
     }
 

@@ -5,42 +5,29 @@ import java.util.List;
 
 public class InsertCommand extends DBCommand {
     @Override
-    public DBResponse query() throws IOException {
-        // Validate database is selected
-        DBResponse validationResponse = validateDatabaseSelected();
-        if (validationResponse != null) return validationResponse;
-
-        // Validate table name and values
-        validationResponse = validateTableNameProvided();
-        if (validationResponse != null) return validationResponse;
-
-        validationResponse = CommandValidator.validateValuesNotEmpty(values);
-        if (validationResponse != null) return validationResponse;
-
+    public String query() throws IOException {
+        String errorMessage = errorChecker.validateDatabaseSelected();
+        if (errorMessage != null) return errorMessage;
+        errorMessage = errorChecker.validateTableNameProvided(tableNames);
+        if (errorMessage != null) return errorMessage;
+        errorMessage = errorChecker.validateValuesNotEmpty(values);
+        if (errorMessage != null) return errorMessage;
         String tableName = tableNames.get(0).toLowerCase();
-
-        // Validate table exists
-        validationResponse = validateTableExists(tableName);
-        if (validationResponse != null) return validationResponse;
-
+        errorMessage = errorChecker.validateTableExists(tableName);
+        if (errorMessage != null) return errorMessage;
         DBTable table = getTable(tableName);
-
-        // Process values - remove quotes
         List<String> processedValues = processValues(values);
-
-        // Add ID to the beginning of the row
         int id = table.generateNextID();
         processedValues.add(0, String.valueOf(id));
-
         if (table.addRow(processedValues)) {
             if (saveCurrentDB()) {
-                return DBResponse.success("1 row inserted into '" + tableName + "'.");
+                return "[OK] 1 row inserted into '" + tableName + "'.";
             } else {
-                return DBResponse.error("Failed to save database after insertion.");
+                return "[ERROR] Failed to save database after insertion.";
             }
         } else {
-            return DBResponse.error("Failed to insert into '" + tableName + "'. Column count mismatch: expected " +
-                    (table.getColumns().size() - 1) + " columns, got " + (processedValues.size() - 1) + " values.");
+            return "[ERROR] Failed to insert into '" + tableName + "'. Column count mismatch: expected " +
+                    (table.getColumns().size() - 1) + " columns, got " + (processedValues.size() - 1) + " values.";
         }
     }
 }

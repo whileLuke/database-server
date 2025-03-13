@@ -4,34 +4,23 @@ import java.io.IOException;
 
 public class CreateTableCommand extends DBCommand {
     @Override
-    public DBResponse query() throws IOException {
-        // Validate database is selected
-        DBResponse validationResponse = validateDatabaseSelected();
-        if (validationResponse != null) return validationResponse;
-
-        // Validate table name is provided
-        validationResponse = validateTableNameProvided();
-        if (validationResponse != null) return validationResponse;
-
+    public String query() throws IOException {
+        String errorMessage = errorChecker.validateDatabaseSelected();
+        if (errorMessage != null) return errorMessage;
+        errorMessage = errorChecker.validateTableNameProvided(tableNames);
+        if (errorMessage != null) return errorMessage;
         String tableName = tableNames.get(0).toLowerCase();
-
-        if (NotAllowedWords.isNotAllowed(tableName)) {
-            return DBResponse.error("Cannot use reserved word '" + tableName + "' as a table name.");
+        if (ReservedWords.isNotAllowed(tableName)) {
+            return "[ERROR] Cannot use reserved word '" + tableName + "' as a table name.";
         }
-
         for (String columnName : columnNames) {
-            if (NotAllowedWords.isNotAllowed(columnName)) {
-                return DBResponse.error("Cannot use reserved word '" + columnName + "' as a column name.");
+            if (ReservedWords.isNotAllowed(columnName)) {
+                return "[ERROR] Cannot use reserved word '" + columnName + "' as a column name.";
             }
         }
-
         DBTable newTable = new DBTable(tableName, columnNames);
         tables.put(tableName, newTable);
-
-        if (saveCurrentDB()) {
-            return DBResponse.success("Table '" + tableName + "' created.");
-        } else {
-            return DBResponse.error("Failed to save the table to disk.");
-        }
+        if (saveCurrentDB()) return "[OK] Successfully created table '" + tableName + ".";
+        else return "[ERROR] Failed to save the table.";
     }
 }

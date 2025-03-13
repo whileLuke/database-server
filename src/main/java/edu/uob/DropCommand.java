@@ -5,43 +5,33 @@ import java.io.IOException;
 
 public class DropCommand extends DBCommand {
     @Override
-    public DBResponse query() throws IOException {
-        // Handle DROP TABLE
+    public String query() throws IOException {
         if (!tableNames.isEmpty()) {
-            // Validate database is selected
-            DBResponse validationResponse = validateDatabaseSelected();
-            if (validationResponse != null) return validationResponse;
-
+            String errorMessage = errorChecker.validateDatabaseSelected();
+            if (errorMessage != null) return errorMessage;
             String tableName = tableNames.get(0).toLowerCase();
-
-            // Validate table exists
-            validationResponse = validateTableExists(tableName);
-            if (validationResponse != null) return validationResponse;
-
-            // Remove table file
+            errorMessage = errorChecker.validateTableExists(tableName);
+            if (errorMessage != null) return errorMessage;
             File tableFile = new File(server.getStorageFolderPath() + File.separator + currentDB, tableName + ".tab");
             if (tableFile.delete()) {
                 tables.remove(tableName);
                 saveCurrentDB();
-                return DBResponse.success("Dropped table '" + tableName + "'.");
+                return "[OK] Dropped table '" + tableName + "'.";
             } else {
-                return DBResponse.error("Failed to delete the table file for '" + tableName + "'.");
+                return "[ERROR] Failed to delete the table file for '" + tableName + "'.";
             }
         }
-        // Handle DROP DATABASE
         else if (DBName != null) {
-            // Validate database name
-            DBResponse validationResponse = CommandValidator.validateDatabaseNameProvided(DBName);
-            if (validationResponse != null) return validationResponse;
-
+            String errorMessage = errorChecker.validateDatabaseNameProvided(DBName);
+            if (errorMessage != null) return errorMessage;
             if (server.deleteDatabase(DBName)) {
-                return DBResponse.success("Dropped database '" + DBName + "'.");
+                return "[OK] Dropped database '" + DBName + "'.";
             } else {
-                return DBResponse.error("Database '" + DBName + "' does not exist.");
+                return "[ERROR] Database '" + DBName + "' does not exist.";
             }
         }
         else {
-            return DBResponse.error("No table or database specified to drop.");
+            return "[ERROR] No table or database specified to drop.";
         }
     }
 }

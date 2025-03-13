@@ -3,7 +3,7 @@ package edu.uob;
 import java.util.Arrays;
 import java.util.List;
 
-public class NotAllowedWords {
+public class ReservedWords {
     private static final List<String> notAllowedWords = Arrays.asList(
             "USE", "CREATE", "DATABASE", "TABLE", "DROP",
             "ALTER", "INSERT", "INTO", "VALUES", "DELETE",

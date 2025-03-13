@@ -12,9 +12,9 @@ public class CommandParser {
         this.server = server;
     }
 
-    public DBResponse parseCommand(List<String> tokensList) throws IOException {
+    public String parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
-        if (tokens.size() < 2) return DBResponse.error("The command you've entered is not long enough (or is empty).");
+        if (tokens.size() < 2) return "[ERROR] The command you've entered is not long enough (or is empty).";
         DBCommand cmd;
         String cmdType = tokens.get(0).toUpperCase();
         switch (cmdType) {
@@ -27,9 +27,9 @@ public class CommandParser {
             case "UPDATE" -> cmd = parseUpdate();
             case "JOIN" -> cmd = parseJoin();
             case "DELETE" -> cmd = parseDelete();
-            default -> { return DBResponse.error("'" + cmdType + "' is not a valid command type."); }
+            default -> { return "[ERROR] '" + cmdType + "' is not a valid command type."; }
         }
-        if(cmd == null) return DBResponse.error("Your command was not formatted correctly.");
+        if(cmd == null) return "[ERROR] Your command was not formatted correctly.";
         cmd.setServer(server);
         return cmd.query();
     }
