@@ -19,25 +19,27 @@ public class SelectCommand extends DBCommand {
 
         DBTable table = getTable(tableName);
         List<String> selectedColumns;
-
-        if (columnNames.contains("*")) selectedColumns = table.getColumnsLowerCase();
+        //String matchedRows = formatRows(originalCaseColumns, matchingRows);
+        if (columnNames.contains("*")) selectedColumns = table.getColumns();
         else {
             selectedColumns = new ArrayList<>(columnNames);
             for (String column : selectedColumns) {
-                error = errorChecker.checkIfColumnExists(table, column.toLowerCase());
+                error = errorChecker.checkIfColumnExists(table, column);
                 if (error != null) return error;
             }
         }
+        List<String> originalCaseColumns = new ArrayList<>();
+        for (String col : selectedColumns) originalCaseColumns.add(table.getStoredColumnName(col));
         List<List<String>> matchingRows;
         TableQuery tableQuery = new TableQuery(table);
 
         if (conditions.isEmpty()) {
             List<Integer> columnIndexes = new ArrayList<>();
-            for (String col : selectedColumns) columnIndexes.add(table.getColumnIndex(col));
+            for (String column : selectedColumns) columnIndexes.add(table.getColumnIndex(column));
             matchingRows = new ArrayList<>();
             getSelectedData(table, matchingRows, columnIndexes);
-        } else matchingRows = tableQuery.selectRowsWithConditions(selectedColumns, conditions);
-        String matchedRows = formatRows(selectedColumns, matchingRows);
+        } else matchingRows = tableQuery.selectRowsWithConditions(originalCaseColumns, conditions);
+        String matchedRows = formatRows(originalCaseColumns, matchingRows);
         return "[OK]\n" + matchedRows;
     }
 

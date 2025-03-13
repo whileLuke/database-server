@@ -21,15 +21,25 @@ public class DBTable {
     public List<String> getColumns() { return new ArrayList<>(columns); } //TO LOWERCASE.
 
     public List<String> getColumnsLowerCase() {
-        List<String> lowerCaseColumns = new ArrayList<>();
+        ArrayList<String> lowerCaseColumns = new ArrayList<>();
         for (String column : columns) lowerCaseColumns.add(column.toLowerCase());
         return lowerCaseColumns;
+    }
+
+    public String getStoredColumnName(String columnName) {
+        for (String column : columns) {
+            if (column.equalsIgnoreCase(columnName)) return column;
+        }
+        return columnName;
     }
 
     public List<List<String>> getRows() { return rows; }
 
     public int getColumnIndex(String columnName) {
-        return columns.indexOf(columnName);
+        for (int index = 0; index < columns.size(); index++) {
+            if (columns.get(index).equalsIgnoreCase(columnName)) return index;
+        }
+        return -1;
     }
 
     public boolean addRow(List<String> row) {

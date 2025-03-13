@@ -34,7 +34,7 @@ public class CommandErrorChecker {
     public String checkIfTableExists(String tableName) {
         if (tableName == null || tableName.isEmpty()) return "[ERROR] You have not specified a table name.";
         DBTable table = tables.get(tableName.toLowerCase());
-        if (table == null) return "[ERROR] The table '" + tableName + "' does not exist in the current database.";
+        if (table == null) return "[ERROR] The table '" + tableName + "' does not exist.";
         return null;
     }
 
@@ -42,6 +42,20 @@ public class CommandErrorChecker {
         if (columnName == null || columnName.isEmpty()) return "[ERROR] You have not specified a column name.";
         if (!table.getColumnsLowerCase().contains(columnName)) {
             return "[ERROR] Column '" + columnName + "' does not exist in table '" + table.getName() + "'.";
+        }
+        return null;
+    }
+
+    public String checkForDuplicateColumns(List<String> columnNames) {
+        if (columnNames == null || columnNames.isEmpty()) return null;
+
+        for (int i = 0; i < columnNames.size(); i++) {
+            String currentColumn = columnNames.get(i).toLowerCase();
+            for (int j = i + 1; j < columnNames.size(); j++) {
+                if (currentColumn.equals(columnNames.get(j).toLowerCase())) {
+                    return "[ERROR] Cannot create a table with duplicate column names: " + columnNames.get(i) + ".";
+                }
+            }
         }
         return null;
     }

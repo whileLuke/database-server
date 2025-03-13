@@ -59,20 +59,17 @@ public class CommandParser {
         String tableName = tokens.get(2);
         CreateTableCommand cmd = new CreateTableCommand();
         cmd.tableNames.add(tableName);
-        if(tokens.size() == 4) {
-            server.getTables().put(tableName, new DBTable(tableName, null));
-            return cmd;
-        }
-        int start = tokens.indexOf("(");
-        int end = tokens.lastIndexOf(")");
-        if (start < 0 || end < 0 || end <= start) return null;
-        if (!parseTableColumns(start, end, cmd)) return null;
+        if (tokens.size() == 4) return cmd;
+        int openingBracket = tokens.indexOf("(");
+        int closingBracket = tokens.lastIndexOf(")");
+        if (openingBracket < 0 || closingBracket < 0 || closingBracket <= openingBracket) return null;
+        if (!parseTableColumns(openingBracket, closingBracket, cmd)) return null;
         //server.getTables().put(tableName, new DBTable(tableName, cmd.columnNames));
         return cmd;
     }
 
-    private boolean parseTableColumns(int start, int end, CreateTableCommand cmd) {
-        List<String> columns = tokens.subList(start + 1, end);
+    private boolean parseTableColumns(int openingBracket, int closingBracket, CreateTableCommand cmd) {
+        List<String> columns = tokens.subList(openingBracket + 1, closingBracket);
         for (int i = 0; i < columns.size(); i += 2) {
             String column = columns.get(i);
             if (isAsterisk(column)) return false;
@@ -138,7 +135,7 @@ public class CommandParser {
     private int getColumnsFromTokens(SelectCommand cmd) {
         int index = 1;
         while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("FROM")) {
-            cmd.columnNames.add(tokens.get(index));
+            cmd.columnNames.add(tokens.get(index).toLowerCase());
             index++;
             if (index < tokens.size() && tokens.get(index).equals(",")) index++;
         }
