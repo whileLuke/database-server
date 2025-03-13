@@ -40,9 +40,12 @@ public class ConditionParser {
 
     private ConditionNode parseComparison() {
         if (index + 2 >= tokens.size()) return null;
-        String columnName = tokens.get(index++);
-        String operator = tokens.get(index++);
-        String value = tokens.get(index++);
+        String columnName = tokens.get(index);
+        index++;
+        String operator = tokens.get(index);
+        index++;
+        String value = tokens.get(index);
+        index++;
         if (value.equalsIgnoreCase("NULL")) {
             if (operator.equals("==")) return new NullCondition(columnName, true);
             else if (operator.equals("!=")) return new NullCondition(columnName, false);
