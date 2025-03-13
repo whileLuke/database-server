@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Tokeniser {
+public class InputTokeniser {
     private static final String[] special_chars = {"(", ")", ",", ";", "!", ">", "<", "="};
 
     public List<String> tokenise(String input) {
@@ -32,31 +32,23 @@ public class Tokeniser {
 
     private String[] tokeniseParts(String input) {
         for (String specialCharacter : special_chars) input = input.replace(specialCharacter, " " + specialCharacter + " ");
-
         while (input.contains("  ")) input = input.replace("  ", " ");
-
         input = input.trim();
         if (input.isEmpty()) return new String[0];
-
         String[] initialTokens = input.split(" ");
-
         return tokeniseCompoundOperators(initialTokens).toArray(new String[0]);
     }
 
     private List<String> tokeniseCompoundOperators(String[] initialTokens) {
         List<String> tokensList = new ArrayList<>();
-
         for (int i = 0; i < initialTokens.length; i++) {
             if (i < initialTokens.length - 1 &&
                     (initialTokens[i].equals(">") || initialTokens[i].equals("<") ||
                             initialTokens[i].equals("=") || initialTokens[i].equals("!")) &&
                     initialTokens[i+1].equals("=")) {
-
                 tokensList.add(initialTokens[i] + initialTokens[i+1]);
                 i++;
-            } else {
-                tokensList.add(initialTokens[i]);
-            }
+            } else tokensList.add(initialTokens[i]);
         }
         return tokensList;
     }

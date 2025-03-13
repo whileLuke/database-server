@@ -77,7 +77,7 @@ public class UpdateCommand extends DBCommand {
     private List<String> tokeniseConditions(List<String> conditions) {
         List<String> tokens = new ArrayList<>();
         for (String condition : conditions) {
-            Tokeniser tokeniser = new Tokeniser(); //Perhaps I could do this part with a tokeniser.
+            InputTokeniser tokeniser = new InputTokeniser(); //Perhaps I could do this part with a tokeniser.
             for (String part : condition.split("\\s+")) {
                 if (!part.isEmpty()) {
                     tokens.add(part);

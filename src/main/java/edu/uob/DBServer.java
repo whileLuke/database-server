@@ -15,7 +15,7 @@ public class DBServer {
     private static final char END_OF_TRANSMISSION = 4;
     public static String storageFolderPath;
     private final DBStorage storage;
-    private final Tokeniser tokeniser;
+    private final InputTokeniser tokeniser;
     //private String query;
     public static String currentDB;
     public static Map<String, DBTable> tables = new HashMap<String, DBTable>();
@@ -39,7 +39,7 @@ public class DBServer {
             System.out.println("Can't seem to create database storage folder " + storageFolderPath);
         }
         storage = new DBStorage(storageFolderPath);
-        tokeniser = new Tokeniser();
+        tokeniser = new InputTokeniser();
     }
 
     /**
