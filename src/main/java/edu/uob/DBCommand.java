@@ -12,6 +12,7 @@ public abstract class DBCommand {
     protected String DBName;
     protected Map<String, DBTable> tables;
     protected CommandErrorChecker errorChecker;
+    protected ConditionParser conditionParser;
     protected List<String> tableNames = new ArrayList<>();
     protected List<String> columnNames = new ArrayList<>();
     protected List<String> values = new ArrayList<>();
@@ -50,21 +51,16 @@ public abstract class DBCommand {
         return processedValues;
     }
 
-    protected String validateDBSelected() { return errorChecker.checkIfDBSelected(); }
+    public String processWhereClause(List<String> tokens) {
+        ConditionParser parser = new ConditionParser(tokens);
+        ConditionNode condition = parser.parseConditions();
 
-    protected String validateTableNameProvided() { return errorChecker.checkIfTableNameProvided(tableNames); }
+        if (parser.getErrorMessage() != null) {
+            return parser.getErrorMessage();
+        }
 
-    protected String validateTableExists(String tableName) { return errorChecker.checkIfTableExists(tableName); }
-
-    protected String validateTableCommands() {
-        String error = validateDBSelected();
-        if (error != null) return error;
-
-        error = validateTableNameProvided();
-        if (error != null) return error;
-
-        String tableName = tableNames.get(0).toLowerCase();
-        return validateTableExists(tableName);
+        return "[OK] Query executed successfully";
     }
+
 
 }

@@ -6,13 +6,27 @@ import java.util.List;
 
 public class DBTableQuery {
     private final DBTable table;
+    private String errorMessage;
 
     public DBTableQuery(DBTable table) { this.table = table; }
+
+    public String getErrorMessage() { return errorMessage; }
 
     public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) {
         List<String> tokens = tokeniseConditions(conditions);
         ConditionParser parser = new ConditionParser(tokens);
-        ConditionNode conditionTree = parser.parse();
+        ConditionNode conditionTree = parser.parseConditions();
+
+        if (parser.getErrorMessage() != null){
+            this.errorMessage = parser.getErrorMessage();
+            return new ArrayList<>();
+        }
+
+        if (conditionTree == null) {
+            this.errorMessage = "[ERROR] Your conditions were not formatted correctly.";
+            return new ArrayList<>();
+        }
+
         List<Integer> columnIndexes = getColumnIndexes(selectedColumns);
         return filterRows(columnIndexes, conditionTree);
     }
@@ -40,13 +54,13 @@ public class DBTableQuery {
                 filteredRows.add(filteredRow);
             }
         }
-        return filteredRows; //Could potentially rename this variable. And a few others in this file.
+        return filteredRows; //Could potentially rename this variable. And a few others in this file. rowsthatapply or something
     }
 
     private List<List<String>> createJoinedTable(DBTable secondTable, int firstColumnIndex, int secondColumnIndex, String secondTableColumn) {
         List<List<String>> joinedRows = new ArrayList<>();
-        List<String> firstTableColumns = table.getColumns();
         List<String> secondTableColumns = secondTable.getColumns();
+
         for (List<String> firstTableRows : table.getRows()) {
             String joinValue = firstTableRows.get(firstColumnIndex);
             for (List<String> secondTableRows : secondTable.getRows()) {

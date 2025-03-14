@@ -5,25 +5,46 @@ import java.util.Arrays;
 import java.util.List;
 
 public class InputTokeniser {
-    private static final String[] special_chars = {"(", ")", ",", ";", "!", ">", "<", "="};
+    private static final String[] specialChars = {"(", ")", ",", ";", "!", ">", "<", "="};
+    private boolean logicalOperatorError = false;
 
     public List<String> tokenise(String input) {
-        List<String> tokens = new ArrayList<>();
-        String[] inQuotesParts = input.split("'");
-        List<String> betweenQuotes = new ArrayList<>();
+        logicalOperatorError = false;
+        checkLogicalOperators(input.toUpperCase());
 
-        for (int i = 0; i < inQuotesParts.length; i++) {
-            if (i % 2 != 0) betweenQuotes.add("'" + inQuotesParts[i] + "'");
+        List<String> tokens = new ArrayList<>();
+        String[] inputParts = input.split("'");
+
+        for (int i = 0; i < inputParts.length; i++) {
+            if (i % 2 != 0) tokens.add("'" + inputParts[i] + "'");
             else {
-                String[] otherTokens = tokeniseParts(inQuotesParts[i]);
-                betweenQuotes.addAll(Arrays.asList(otherTokens));
+                String[] otherTokens = tokeniseParts(inputParts[i]);
+                tokens.addAll(Arrays.asList(otherTokens));
             }
         }
-        return betweenQuotes;
+        return tokens;
+    }
+
+    private void checkLogicalOperators(String input) {
+        String[] inputParts = input.split("'");
+
+        for (int i = 0; i < inputParts.length; i += 2) {
+            String part = " " + inputParts[i] + " ";
+
+            if (part.contains("AND") && !part.contains(" AND ")) {
+                logicalOperatorError = true;
+                return;
+            }
+
+            if (part.contains("OR") && !part.contains(" OR ")) {
+                logicalOperatorError = true;
+                return;
+            }
+        }
     }
 
     private String[] tokeniseParts(String input) {
-        for (String specialCharacter : special_chars) input = input.replace(specialCharacter, " " + specialCharacter + " ");
+        for (String specialCharacter : specialChars) input = input.replace(specialCharacter, " " + specialCharacter + " ");
         while (input.contains("  ")) input = input.replace("  ", " ");
         input = input.trim();
         if (input.isEmpty()) return new String[0];
@@ -44,4 +65,6 @@ public class InputTokeniser {
         }
         return tokensList;
     }
+
+    public boolean hasLogicalOperatorError() { return logicalOperatorError; }
 }

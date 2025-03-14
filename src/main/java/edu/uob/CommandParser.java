@@ -15,6 +15,7 @@ public class CommandParser {
     public String parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
         if (tokens.size() < 2) return "[ERROR] The command you've entered is not long enough (or is empty).";
+
         DBCommand cmd;
         String cmdType = tokens.get(0).toUpperCase();
         switch (cmdType) {

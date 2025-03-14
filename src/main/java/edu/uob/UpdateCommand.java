@@ -7,36 +7,33 @@ import java.util.List;
 public class UpdateCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = validateUpdateCommand();
-        if (error != null) return error;
+        String errorMessage = errorChecker.checkUpdateCommand(tableNames, columnNames, values, conditions);
+        if (errorMessage != null) return errorMessage;
 
         String tableName = tableNames.get(0).toLowerCase();
         DBTable table = getTable(tableName);
-        error = validateColumns(table);
-        if (error != null) return error;
+        errorMessage = validateColumns(table);
+        if (errorMessage != null) return errorMessage;
 
-        int updatedRowCount = updateMatchingRows(table);
+        List<List<String>> rows = table.getRows();
+        List<String> columns = table.getColumnsLowerCase();
+        List<String> tokens = tokeniseConditions(conditions);
+        ConditionParser parser = new ConditionParser(tokens);
+        ConditionNode conditionTree = parser.parseConditions();
+        if (parser.getErrorMessage() != null) return parser.getErrorMessage();
+
+        int updatedRowCount = 0;
+        for (List<String> row : rows) {
+            if (conditionTree.evaluateCondition(row, columns)) {
+                updatedRowCount++;
+                updateRow(row, columns);
+            }
+        }
+
         if (updatedRowCount > 0) {
             if (saveCurrentDB()) return "[OK] " + updatedRowCount + " row(s) updated.";
             else return "[ERROR] Failed to save database after update.";
         } else return "[ERROR] No rows matched the update condition.";
-    }
-
-    private String validateUpdateCommand() {
-        String error =  validateTableCommands();
-        if (error != null) return error;
-
-        if (columnNames.isEmpty() || values.isEmpty()) {
-            return "[ERROR] UPDATE needs at least one column name and at least one value.";
-        }
-
-        if (columnNames.size() != values.size()) {
-            return "[ERROR] You have input a different number of column names (" +
-                    columnNames.size() + ") to values (" + values.size() +".";
-        }
-
-        if (conditions.isEmpty()) return "[ERROR] UPDATE commands need a WHERE condition.";
-        return null;
     }
 
     private String validateColumns(DBTable table) {
@@ -48,23 +45,6 @@ public class UpdateCommand extends DBCommand {
             if (error != null) return error;
         }
         return null;
-    }
-
-    private int updateMatchingRows(DBTable table) {
-        List<List<String>> rows = table.getRows();
-        List<String> columns = table.getColumnsLowerCase();
-        List<String> tokens = tokeniseConditions(conditions);
-        ConditionParser parser = new ConditionParser(tokens);
-        ConditionNode conditionTree = parser.parse();
-        int updatedRowCount = 0;
-
-        for (List<String> row : rows) {
-            if (conditionTree.evaluateCondition(row, columns)) {
-                updatedRowCount++;
-                updateRow(row, columns);
-            }
-        }
-        return updatedRowCount;
     }
 
     private void updateRow(List<String> row, List<String> columns) {

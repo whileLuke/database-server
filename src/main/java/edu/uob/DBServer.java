@@ -51,7 +51,11 @@ public class DBServer {
         if (command == null || command.isEmpty()) return "[ERROR] Cannot have an empty command.";
         if (!command.endsWith(";")) return "[ERROR] Command must end with a semicolon (\";\").";
         if (command.contains("\"")) return "[ERROR] Command must not contain double quotes (\").";
+
         List<String> tokens = tokeniser.tokenise(command);
+        if (tokeniser.hasLogicalOperatorError()) {
+            return "[ERROR] AND and OR must be surrounded by spaces.";
+        }
         CommandParser parser = new CommandParser(this);
         return parser.parseCommand(tokens); //Might need an error message or not here.
     }

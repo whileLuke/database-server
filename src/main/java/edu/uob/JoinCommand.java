@@ -19,8 +19,8 @@ public class JoinCommand extends DBCommand {
         DBTable table1 = getTable(table1Name);
         DBTable table2 = getTable(table2Name);
         if (columnNames.size() != 2) return "[ERROR] The JOIN command needs two column names";
-        String column1 = columnNames.get(0);
-        String column2 = columnNames.get(1);
+        String column1 = columnNames.get(0).toLowerCase();
+        String column2 = columnNames.get(1).toLowerCase();
         error = errorChecker.checkIfColumnExists(table1, column1);
         if (error != null) return error;
         error = errorChecker.checkIfColumnExists(table2, column2);
@@ -28,9 +28,9 @@ public class JoinCommand extends DBCommand {
         DBTableQuery tableQuery = new DBTableQuery(table1);
         List<List<String>> joinResult = tableQuery.joinWith(table2, column1, column2);
         List<String> combinedColumnNames = new ArrayList<>();
-        for (String col : table1.getColumns()) combinedColumnNames.add(table1Name + "." + col);
-        for (String col : table2.getColumns()) {
-            if (!col.equals(column2)) combinedColumnNames.add(table2Name + "." + col);
+        for (String column : table1.getColumns()) combinedColumnNames.add(table1Name + "." + column);
+        for (String column : table2.getColumns()) {
+            if (!column.equals(column2)) combinedColumnNames.add(table2Name + "." + column);
         }
         String formattedResult = formatResult(combinedColumnNames, joinResult);
         return "[OK] Tables joined successfully.\n" + formattedResult;

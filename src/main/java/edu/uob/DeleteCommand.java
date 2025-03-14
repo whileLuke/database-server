@@ -8,22 +8,22 @@ import java.util.List;
 public class DeleteCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.checkIfDBSelected();
+        String errorMessage = errorChecker.checkDeleteCommand(tableNames, conditions);
         if (errorMessage != null) return errorMessage;
-        //error = errorChecker.validateTableNameProvided(tableNames);
-        //if (error != null) return error;
+
         String tableName = tableNames.get(0).toLowerCase();
-        errorMessage = errorChecker.checkIfTableExists(tableName);
-        if (errorMessage != null) return errorMessage;
         DBTable table = getTable(tableName);
-        if (conditions.isEmpty()) return "[ERROR] DELETE commands require a WHERE condition.";
+
         List<List<String>> rows = table.getRows();
         List<String> columns = table.getColumnsLowerCase();
         List<String> tokens = tokeniseConditions(conditions);
         ConditionParser parser = new ConditionParser(tokens);
-        ConditionNode conditionTree = parser.parse();
+        ConditionNode conditionTree = parser.parseConditions();
+        if (parser.getErrorMessage() != null) return parser.getErrorMessage();
+
         int initialRowCount = rows.size();
         Iterator<List<String>> iterator = rows.iterator();
+
         while (iterator.hasNext()) {
             List<String> row = iterator.next();
             boolean matches = conditionTree.evaluateCondition(row, columns);

@@ -7,8 +7,8 @@ import java.util.List;
 public class SelectCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = validateTableCommands();
-        if (error != null) return error;
+        String errorMessage = errorChecker.checkTableFunctionality(tableNames);
+        if (errorMessage != null) return errorMessage;
 
         String tableName = tableNames.get(0).toLowerCase();
         DBTable table = getTable(tableName);
@@ -18,8 +18,8 @@ public class SelectCommand extends DBCommand {
         else {
             selectedColumns = new ArrayList<>(columnNames);
             for (String column : selectedColumns) {
-                error = errorChecker.checkIfColumnExists(table, column);
-                if (error != null) return error;
+                errorMessage = errorChecker.checkIfColumnExists(table, column);
+                if (errorMessage != null) return errorMessage;
             }
         }
         List<String> originalCaseColumns = new ArrayList<>();
@@ -33,7 +33,12 @@ public class SelectCommand extends DBCommand {
             for (String column : selectedColumns) columnIndexes.add(table.getColumnIndex(column));
             matchingRows = new ArrayList<>();
             getSelectedData(table, matchingRows, columnIndexes);
-        } else matchingRows = tableQuery.selectRowsWithConditions(originalCaseColumns, conditions);
+        } else {
+            try {
+                matchingRows = tableQuery.selectRowsWithConditions(originalCaseColumns, conditions);
+                if (tableQuery.getErrorMessage() != null) return tableQuery.getErrorMessage();
+            } catch (Exception e) { return "[ERROR] Your conditions were not formatted correctly."; }
+        }
         String matchedRows = formatRows(originalCaseColumns, matchingRows);
         return "[OK]\n" + matchedRows;
     }
