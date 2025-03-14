@@ -61,6 +61,4 @@ public abstract class DBCommand {
 
         return "[OK] Query executed successfully";
     }
-
-
 }

@@ -6,12 +6,8 @@ import java.util.List;
 
 public class InputTokeniser {
     private static final String[] specialChars = {"(", ")", ",", ";", "!", ">", "<", "="};
-    private boolean logicalOperatorError = false;
 
     public List<String> tokenise(String input) {
-        logicalOperatorError = false;
-        checkLogicalOperators(input.toUpperCase());
-
         List<String> tokens = new ArrayList<>();
         String[] inputParts = input.split("'");
 
@@ -23,24 +19,6 @@ public class InputTokeniser {
             }
         }
         return tokens;
-    }
-
-    private void checkLogicalOperators(String input) {
-        String[] inputParts = input.split("'");
-
-        for (int i = 0; i < inputParts.length; i += 2) {
-            String part = " " + inputParts[i] + " ";
-
-            if (part.contains("AND") && !part.contains(" AND ")) {
-                logicalOperatorError = true;
-                return;
-            }
-
-            if (part.contains("OR") && !part.contains(" OR ")) {
-                logicalOperatorError = true;
-                return;
-            }
-        }
     }
 
     private String[] tokeniseParts(String input) {
@@ -65,6 +43,4 @@ public class InputTokeniser {
         }
         return tokensList;
     }
-
-    public boolean hasLogicalOperatorError() { return logicalOperatorError; }
 }

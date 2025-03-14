@@ -11,7 +11,7 @@ public class ConditionParser {
 
     public ConditionNode parseConditions() {
         if (tokens.isEmpty()) {
-            errorMessage = "No conditions were prodivded.";
+            errorMessage = "No conditions were provided.";
             return null;
         }
         return parseExpression();
@@ -52,7 +52,7 @@ public class ConditionParser {
 
     private ConditionNode parseComparison() {
         if (index + 2 >= tokens.size()) {
-            errorMessage = "[ERROR] Invalid comparison was attempted.";
+            errorMessage = "[ERROR] An invalid comparison was attempted.";
             return null;
         }
         String columnName = tokens.get(index);
@@ -60,11 +60,21 @@ public class ConditionParser {
         String operator = tokens.get(index);
         index++;
         String value = tokens.get(index);
+
         if (value.equals(";")) {
             errorMessage = "[ERROR] An invalid comparison was attempted.";
             return null;
         }
         index++;
+
+        if (index < tokens.size()) {
+            String nextToken = tokens.get(index);
+            if (!(nextToken.equalsIgnoreCase("AND") || nextToken.equalsIgnoreCase("OR") ||
+                    nextToken.equals(")") || nextToken.equals(";"))) {
+                errorMessage = "[ERROR] If there are multiple conditions, there must be an AND/OR between them.";
+                return null;
+            }
+        }
 
         if (value.equalsIgnoreCase("NULL")) {
             if (operator.equals("==")) return new NullCondition(columnName, true);
