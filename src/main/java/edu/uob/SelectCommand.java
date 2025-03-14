@@ -7,19 +7,13 @@ import java.util.List;
 public class SelectCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.checkIfDatabaseSelected();
-        if (error != null) return error;
-
-        error = errorChecker.checkIfTableNameProvided(tableNames);
+        String error = validateTableCommands();
         if (error != null) return error;
 
         String tableName = tableNames.get(0).toLowerCase();
-        error = errorChecker.checkIfTableExists(tableName);
-        if (error != null) return error;
-
         DBTable table = getTable(tableName);
         List<String> selectedColumns;
-        //String matchedRows = formatRows(originalCaseColumns, matchingRows);
+
         if (columnNames.contains("*")) selectedColumns = table.getColumns();
         else {
             selectedColumns = new ArrayList<>(columnNames);
@@ -29,9 +23,10 @@ public class SelectCommand extends DBCommand {
             }
         }
         List<String> originalCaseColumns = new ArrayList<>();
+
         for (String col : selectedColumns) originalCaseColumns.add(table.getStoredColumnName(col));
         List<List<String>> matchingRows;
-        TableQuery tableQuery = new TableQuery(table);
+        DBTableQuery tableQuery = new DBTableQuery(table);
 
         if (conditions.isEmpty()) {
             List<Integer> columnIndexes = new ArrayList<>();

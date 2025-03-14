@@ -5,7 +5,7 @@ import java.io.IOException;
 public class AlterCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.checkIfDatabaseSelected();
+        String error = errorChecker.checkIfDBSelected();
         if (error != null) return error;
         if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null){
             return "[ERROR] Incorrect ALTER command - either no table name, column names or alteration type provided.";

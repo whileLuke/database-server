@@ -1,7 +1,5 @@
 package edu.uob;
 
-import org.junit.jupiter.api.*;
-
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,14 +29,13 @@ public class MyTests {
     }
 
     @Test
-    public void testBasicCRUDOperations() throws IOException {
+    public void testBasicOperations() throws IOException {
         String randomName = generateRandomName();
         sendCommandToServer("CREATE DATABASE " + randomName + ";");
         sendCommandToServer("USE " + randomName + ";");
         String createTableResponse = sendCommandToServer("CREATE TABLE marks (name, mark, pass);");
         assertTrue(createTableResponse.contains("[OK]"));
 
-        // Test INSERT command
         String insertResponse1 = sendCommandToServer("INSERT INTO marks VALUES ('Simon', 65, TRUE);");
         String insertResponse2 = sendCommandToServer("INSERT INTO marks VALUES ('Sion', 55, TRUE);");
         String insertResponse3 = sendCommandToServer("INSERT INTO marks VALUES ('Rob', 35, FALSE);");
@@ -48,36 +45,30 @@ public class MyTests {
         assertTrue(insertResponse3.contains("[OK]"));
         assertTrue(insertResponse4.contains("[OK]"));
 
-        // Test SELECT * query
         String selectResponse = sendCommandToServer("SELECT * FROM marks;");
         assertTrue(selectResponse.contains("id\tname\tmark\tpass"));
         assertTrue(selectResponse.contains("1\tSimon\t65\tTRUE"));
         assertTrue(selectResponse.contains("4\tChris\t20\tFALSE"));
 
-        // Test SELECT with WHERE name != 'Sion'
         String whereNotEqualsResponse = sendCommandToServer("SELECT * FROM marks WHERE name != 'Sion';");
         assertTrue(whereNotEqualsResponse.contains("id\tname\tmark\tpass"));
         assertFalse(whereNotEqualsResponse.contains("2\tSion\t55\tTRUE"));
 
-        // Test SELECT with WHERE pass == TRUE
         String wherePassTrueResponse = sendCommandToServer("SELECT * FROM marks WHERE pass == TRUE;");
         assertTrue(wherePassTrueResponse.contains("id\tname\tmark\tpass"));
         assertTrue(wherePassTrueResponse.contains("1\tSimon\t65\tTRUE"));
         assertFalse(wherePassTrueResponse.contains("3\tRob\t35\tFALSE"));
 
-        // Test UPDATE command
         String updateResponse = sendCommandToServer("UPDATE marks SET mark = 38 WHERE name == 'Chris';");
         assertTrue(updateResponse.contains("[OK]"));
         String verifyUpdate = sendCommandToServer("SELECT * FROM marks WHERE name == 'Chris';");
         assertTrue(verifyUpdate.contains("4\tChris\t38\tFALSE"));
 
-        // Test DELETE command
         String deleteResponse = sendCommandToServer("DELETE FROM marks WHERE name == 'Sion';");
         assertTrue(deleteResponse.contains("[OK]"));
         String verifyDelete = sendCommandToServer("SELECT * FROM marks;");
         assertFalse(verifyDelete.contains("Sion"));
 
-        // Test complex SELECT query
         String complexSelectResponse = sendCommandToServer("SELECT * FROM marks WHERE (pass == FALSE) AND (mark > 35);");
         assertTrue(complexSelectResponse.contains("id\tname\tmark\tpass"));
         assertTrue(complexSelectResponse.contains("4\tChris\t38\tFALSE"));
@@ -110,7 +101,6 @@ public class MyTests {
         String verifyDelete = sendCommandToServer("SELECT * FROM marks;");
         assertFalse(verifyDelete.contains("Sion"));
 
-        // Test SELECT with LIKE
         String likeResponse = sendCommandToServer("SELECT * FROM marks WHERE name LIKE 'i';");
         assertTrue(likeResponse.contains("1\tSimon\t65\tTRUE"));
         assertTrue(likeResponse.contains("4\tChris\t38\tFALSE"));
@@ -118,7 +108,6 @@ public class MyTests {
 
         String selectMultiResponse = sendCommandToServer("SELECT * FROM marks WHERE (pass == FALSE) AND (mark > 35);");
         assertTrue(selectMultiResponse.contains("4\tChris\t38\tFALSE"));
-        // Test SELECT single column
         String selectIdResponse = sendCommandToServer("SELECT id FROM marks WHERE pass == FALSE;");
         assertTrue(selectIdResponse.contains("id"));
         assertTrue(selectIdResponse.contains("3")); // Assuming id 3 and 4 correspond to failed entries
@@ -137,19 +126,16 @@ public class MyTests {
         sendCommandToServer("CREATE TABLE marks (name, mark, pass);");
         sendCommandToServer("INSERT INTO marks VALUES ('Simon', 65, TRUE);");
 
-        // Test ALTER TABLE ADD
         String alterAddResponse = sendCommandToServer("ALTER TABLE marks ADD age;");
         assertTrue(alterAddResponse.contains("[OK]"));
         String selectWithAgeResponse = sendCommandToServer("SELECT * FROM marks;");
         assertTrue(selectWithAgeResponse.contains("age"));
 
-        // Update newly added column
         String updateAgeResponse = sendCommandToServer("UPDATE marks SET age = 35 WHERE name == 'Simon';");
         assertTrue(updateAgeResponse.contains("[OK]"));
         String selectUpdatedAge = sendCommandToServer("SELECT * FROM marks WHERE name == 'Simon';");
         assertTrue(selectUpdatedAge.contains("35"));
 
-        // Test ALTER TABLE DROP
         String alterDropResponse = sendCommandToServer("ALTER TABLE marks DROP pass;");
         assertTrue(alterDropResponse.contains("[OK]"));
         String selectWithoutPass = sendCommandToServer("SELECT * FROM marks;");
@@ -164,15 +150,12 @@ public class MyTests {
         String missingSemicolonResponse = sendCommandToServer("SELECT * FROM marks");
         assertTrue(missingSemicolonResponse.contains("[ERROR]"));
 
-        // Test selecting non-existent table
         String nonExistentTableResponse = sendCommandToServer("SELECT * FROM crew;");
         assertTrue(nonExistentTableResponse.contains("[ERROR]"));
 
-        // Test selecting non-existent attribute
         String nonExistentAttrResponse = sendCommandToServer("SELECT height FROM marks WHERE name == 'Chris';");
         assertTrue(nonExistentAttrResponse.contains("[ERROR]"));
 
-        // Test invalid DELETE query
         String invalidDeleteResponse = sendCommandToServer("DELETE FROM non_existing_table WHERE id == 1;");
         assertTrue(invalidDeleteResponse.contains("[ERROR]"));
     }
@@ -189,7 +172,6 @@ public class MyTests {
         sendCommandToServer("INSERT INTO coursework VALUES ('OXO', 1);");
         sendCommandToServer("INSERT INTO coursework VALUES ('STAG', 2);");
 
-        // Test JOIN command
         String joinResponse = sendCommandToServer("JOIN coursework AND marks ON submission AND id;");
         assertTrue(joinResponse.contains("coursework.task"));
         assertTrue(joinResponse.contains("marks.name"));
@@ -206,7 +188,6 @@ public class MyTests {
         String dropTableResponse = sendCommandToServer("DROP TABLE marks;");
         assertTrue(dropTableResponse.contains("[OK]"));
 
-        // Drop database
         String dropDatabaseResponse = sendCommandToServer("DROP DATABASE markbook;");
         assertTrue(dropDatabaseResponse.contains("[OK]"));
     }

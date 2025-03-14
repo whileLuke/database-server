@@ -26,7 +26,7 @@ public class CommandErrorChecker {
         return null;
     }
 
-    public String checkIfDatabaseSelected() {
+    public String checkIfDBSelected() {
         if (currentDB == null) return "[ERROR] No database selected. Type 'USE [DBName];' to select a database.";
         return null;
     }

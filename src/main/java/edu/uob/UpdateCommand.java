@@ -9,10 +9,12 @@ public class UpdateCommand extends DBCommand {
     public String query() throws IOException {
         String error = validateUpdateCommand();
         if (error != null) return error;
+
         String tableName = tableNames.get(0).toLowerCase();
         DBTable table = getTable(tableName);
         error = validateColumns(table);
         if (error != null) return error;
+
         int updatedRowCount = updateMatchingRows(table);
         if (updatedRowCount > 0) {
             if (saveCurrentDB()) return "[OK] " + updatedRowCount + " row(s) updated.";
@@ -21,20 +23,18 @@ public class UpdateCommand extends DBCommand {
     }
 
     private String validateUpdateCommand() {
-        String error = errorChecker.checkIfDatabaseSelected();
+        String error =  validateTableCommands();
         if (error != null) return error;
-        error = errorChecker.checkIfTableNameProvided(tableNames);
-        if (error != null) return error;
-        String tableName = tableNames.get(0).toLowerCase();
-        error = errorChecker.checkIfTableExists(tableName);
-        if (error != null) return error;
-        if (columnNames.isEmpty() || values.isEmpty()) { //Should this be using more of my error checking class?
+
+        if (columnNames.isEmpty() || values.isEmpty()) {
             return "[ERROR] UPDATE needs at least one column name and at least one value.";
         }
+
         if (columnNames.size() != values.size()) {
-            return "[ERROR] You have input different number of column names (" +
+            return "[ERROR] You have input a different number of column names (" +
                     columnNames.size() + ") to values (" + values.size() +".";
         }
+
         if (conditions.isEmpty()) return "[ERROR] UPDATE commands need a WHERE condition.";
         return null;
     }
@@ -43,6 +43,7 @@ public class UpdateCommand extends DBCommand {
         for (String columnName : columnNames) {
             String error = errorChecker.checkIfColumnExists(table, columnName);
             if (error != null) return error;
+
             error = errorChecker.checkIfIDColumn(columnName);
             if (error != null) return error;
         }
@@ -56,6 +57,7 @@ public class UpdateCommand extends DBCommand {
         ConditionParser parser = new ConditionParser(tokens);
         ConditionNode conditionTree = parser.parse();
         int updatedRowCount = 0;
+
         for (List<String> row : rows) {
             if (conditionTree.evaluateCondition(row, columns)) {
                 updatedRowCount++;
@@ -77,11 +79,8 @@ public class UpdateCommand extends DBCommand {
     private List<String> tokeniseConditions(List<String> conditions) {
         List<String> tokens = new ArrayList<>();
         for (String condition : conditions) {
-            InputTokeniser tokeniser = new InputTokeniser(); //Perhaps I could do this part with a tokeniser.
-            for (String part : condition.split("\\s+")) {
-                if (!part.isEmpty()) {
-                    tokens.add(part);
-                }
+            for (String conditionPart : condition.split("\\s+")) {
+                if (!conditionPart.isEmpty()) tokens.add(conditionPart);
             }
         }
         return tokens;

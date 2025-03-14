@@ -5,7 +5,7 @@ import java.io.IOException;
 public class CreateTableCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.checkIfDatabaseSelected();
+        String errorMessage = errorChecker.checkIfDBSelected();
         if (errorMessage != null) return errorMessage;
 
         errorMessage = errorChecker.checkIfTableNameProvided(tableNames);

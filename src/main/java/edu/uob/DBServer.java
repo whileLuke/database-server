@@ -18,11 +18,8 @@ public class DBServer {
     public static String storageFolderPath;
     private final DBStorage storage;
     private final InputTokeniser tokeniser;
-    //private String query;
     public static String currentDB;
     public static Map<String, DBTable> tables = new HashMap<String, DBTable>();
-    //String[] specialCharacters = {"(",")",",",";","!",">","<","="};
-    //ArrayList<String> tokens = new ArrayList<String>();
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
@@ -64,36 +61,34 @@ public class DBServer {
         return storage.saveTables(tables, currentDB);
     }
 
-    public boolean loadTables(String dbName) throws IOException {
-        if (!storage.databaseExists(dbName)) return false;
-        tables = storage.loadTables(dbName);
-        currentDB = dbName.toLowerCase();
+    public boolean loadTables(String DBName) throws IOException {
+        if (!storage.DBExists(DBName)) return false;
+        tables = storage.loadTables(DBName);
+        currentDB = DBName.toLowerCase();
         return true;
     }
 
-    public boolean useDatabase(String dbName) throws IOException {
-        if (!storage.databaseExists(dbName)) return false;
-        return loadTables(dbName);
+    public boolean useDB(String DBName) throws IOException {
+        if (!storage.DBExists(DBName)) return false;
+        return loadTables(DBName);
     }
 
-    public boolean createDatabase(String dbName) {
-        if (dbName == null) return false;
-        return storage.createDatabase(dbName);
+    public boolean createDB(String DBName) {
+        if (DBName == null) return false;
+        return storage.createDB(DBName);
     }
 
-    public boolean deleteDatabase(String dbName) {
-        if (currentDB != null && currentDB.equalsIgnoreCase(dbName)) {
+    public boolean deleteDB(String DBName) {
+        if (currentDB != null && currentDB.equalsIgnoreCase(DBName)) {
             tables.clear();
             currentDB = null;
         }
-        return storage.deleteDatabase(dbName);
+        return storage.deleteDB(DBName);
     }
 
     public String getCurrentDB() {
         return currentDB;
     }
-
-   // public void setCurrentDB(String dbName) { this.currentDB = dbName; }
 
     public Map<String, DBTable> getTables() { return tables; }
 

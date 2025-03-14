@@ -7,7 +7,7 @@ import java.util.List;
 public class JoinCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.checkIfDatabaseSelected();
+        String error = errorChecker.checkIfDBSelected();
         if (error != null) return error;
         if (tableNames.size() != 2) return "[ERROR] The JOIN command needs two table names.";
         String table1Name = tableNames.get(0).toLowerCase();
@@ -25,7 +25,7 @@ public class JoinCommand extends DBCommand {
         if (error != null) return error;
         error = errorChecker.checkIfColumnExists(table2, column2);
         if (error != null) return error;
-        TableQuery tableQuery = new TableQuery(table1);
+        DBTableQuery tableQuery = new DBTableQuery(table1);
         List<List<String>> joinResult = tableQuery.joinWith(table2, column1, column2);
         List<String> combinedColumnNames = new ArrayList<>();
         for (String col : table1.getColumns()) combinedColumnNames.add(table1Name + "." + col);

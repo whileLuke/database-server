@@ -8,7 +8,7 @@ import java.util.List;
 public class DeleteCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.checkIfDatabaseSelected();
+        String errorMessage = errorChecker.checkIfDBSelected();
         if (errorMessage != null) return errorMessage;
         //error = errorChecker.validateTableNameProvided(tableNames);
         //if (error != null) return error;

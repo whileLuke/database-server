@@ -6,7 +6,7 @@ import java.util.List;
 public class InsertCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.checkIfDatabaseSelected();
+        String errorMessage = errorChecker.checkIfDBSelected();
         if (errorMessage != null) return errorMessage;
         errorMessage = errorChecker.checkIfTableNameProvided(tableNames);
         if (errorMessage != null) return errorMessage;

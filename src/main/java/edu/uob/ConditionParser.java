@@ -46,6 +46,7 @@ public class ConditionParser {
         index++;
         String value = tokens.get(index);
         index++;
+
         if (value.equalsIgnoreCase("NULL")) {
             if (operator.equals("==")) return new NullCondition(columnName, true);
             else if (operator.equals("!=")) return new NullCondition(columnName, false);

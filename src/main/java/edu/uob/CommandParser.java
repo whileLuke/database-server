@@ -49,22 +49,24 @@ public class CommandParser {
     private DBCommand parseCreate() {
         if (tokens.size() < 4) return null;
         String createType = tokens.get(1).toLowerCase();
-        if (createType.equals("database")) return parseCreateDatabase();
+        if (createType.equals("database")) return parseCreateDB();
         if (createType.equals("table")) return parseCreateTable();
         return null;
     }
 
     private DBCommand parseCreateTable() {
         if (tokens.size() < 4 || !endsWithSemicolon()) return null;
+
         String tableName = tokens.get(2);
         CreateTableCommand cmd = new CreateTableCommand();
         cmd.tableNames.add(tableName);
         if (tokens.size() == 4) return cmd;
+
         int openingBracket = tokens.indexOf("(");
         int closingBracket = tokens.lastIndexOf(")");
         if (openingBracket < 0 || closingBracket < 0 || closingBracket <= openingBracket) return null;
         if (!parseTableColumns(openingBracket, closingBracket, cmd)) return null;
-        //server.getTables().put(tableName, new DBTable(tableName, cmd.columnNames));
+
         return cmd;
     }
 
@@ -80,9 +82,9 @@ public class CommandParser {
         return true;
     }
 
-    private DBCommand parseCreateDatabase() {
+    private DBCommand parseCreateDB() {
         if (tokens.size() == 4 && endsWithSemicolon() && !isAsterisk(tokens.get(2))) {
-            CreateDatabaseCommand cmd = new CreateDatabaseCommand();
+            CreateDBCommand cmd = new CreateDBCommand();
             cmd.DBName = tokens.get(2);
             return cmd;
         } else return null;
@@ -90,11 +92,19 @@ public class CommandParser {
 
     private DBCommand parseDrop() {
         if (tokens.size() != 4 || !endsWithSemicolon()) return null;
-        DropCommand cmd = new DropCommand();
-        if (tokens.get(1).equalsIgnoreCase("database")) cmd.DBName = tokens.get(2);
-        else if (tokens.get(1).equalsIgnoreCase("table")) cmd.tableNames.add(tokens.get(2));
+
+        if (tokens.get(1).equalsIgnoreCase("database")) {
+            DropDBCommand cmd = new DropDBCommand();
+            cmd.DBName = tokens.get(2);
+            return cmd;
+        }
+
+        else if (tokens.get(1).equalsIgnoreCase("table")) {
+            DropTableCommand cmd = new DropTableCommand();
+            cmd.tableNames.add(tokens.get(2));
+            return cmd;
+        }
         else return null;
-        return cmd;
     }
 
     private DBCommand parseAlter() {

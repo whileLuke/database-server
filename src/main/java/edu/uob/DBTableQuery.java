@@ -4,10 +4,10 @@ package edu.uob;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TableQuery {
+public class DBTableQuery {
     private final DBTable table;
 
-    public TableQuery(DBTable table) { this.table = table; }
+    public DBTableQuery(DBTable table) { this.table = table; }
 
     public List<List<String>> selectRowsWithConditions(List<String> selectedColumns, List<String> conditions) {
         List<String> tokens = tokeniseConditions(conditions);
