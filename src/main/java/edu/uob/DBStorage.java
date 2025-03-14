@@ -8,25 +8,25 @@ public class DBStorage {
 
     public DBStorage(String baseStoragePath) { this.baseStoragePath = baseStoragePath; }
 
-    public boolean createDB(String DBName) {
-        if (DBName == null || DBName.isEmpty()) return false;
-        File dbDirectory = getDBDirectory(DBName);
+    public boolean createDB(String dbName) {
+        if (dbName == null || dbName.isEmpty()) return false;
+
+        File dbDirectory = getDBDirectory(dbName);
         if (dbDirectory.exists()) return false;
         return dbDirectory.mkdirs();
     }
 
-    public boolean DBExists(String DBName) {
-        if (DBName == null || DBName.isEmpty()) return false;
+    public boolean DBExists(String dbName) {
+        if (dbName == null || dbName.isEmpty()) return false;
 
-        File dbDirectory = getDBDirectory(DBName);
+        File dbDirectory = getDBDirectory(dbName);
         return dbDirectory.exists() && dbDirectory.isDirectory();
     }
 
-    public boolean deleteDB(String DBName) {
-        File DBDirectory = getDBDirectory(DBName);
-        if (!DBDirectory.exists() || !DBDirectory.isDirectory()) return false;
-
-        return deleteDirectory(DBDirectory);
+    public boolean deleteDB(String dbName) {
+        File dbDirectory = getDBDirectory(dbName);
+        if (!dbDirectory.exists() || !dbDirectory.isDirectory()) return false;
+        return deleteDirectory(dbDirectory);
     }
 
     private boolean deleteDirectory(File directory) {
@@ -41,10 +41,10 @@ public class DBStorage {
         return directory.delete();
     }
 
-    public Map<String, DBTable> loadTables(String DBName) throws IOException {
-        File dbDirectory = getDBDirectory(DBName);
+    public Map<String, DBTable> loadTables(String dbName) throws IOException {
+        File dbDirectory = getDBDirectory(dbName);
         if (!dbDirectory.exists() || !dbDirectory.isDirectory()) {
-            throw new IOException("Database directory does not exist: " + DBName);
+            throw new IOException("Database directory does not exist: " + dbName);
         }
 
         Map<String, DBTable> tables = new HashMap<>();
@@ -53,7 +53,7 @@ public class DBStorage {
         if (tableFiles != null) {
             for (File tableFile : tableFiles) {
                 String tableName = getTableName(tableFile);
-                DBTable table = loadTableFromFile(DBName, tableName);
+                DBTable table = loadTableFromFile(dbName, tableName);
                 if (table != null) {
                     tables.put(tableName.toLowerCase(), table);
                 }
@@ -63,17 +63,17 @@ public class DBStorage {
         return tables;
     }
 
-    public boolean saveTable(DBTable table, String DBName) throws IOException {
-        if (table == null || DBName == null || DBName.isEmpty()) return false;
+    public boolean saveTable(DBTable table, String dbName) throws IOException {
+        if (table == null || dbName == null || dbName.isEmpty()) return false;
 
-        File DBDirectory = getDBDirectory(DBName);
-        if (!DBDirectory.exists()) {
-            if (!DBDirectory.mkdirs()) {
-                throw new IOException("Failed to create database directory: " + DBName);
+        File dbDirectory = getDBDirectory(dbName);
+        if (!dbDirectory.exists()) {
+            if (!dbDirectory.mkdirs()) {
+                throw new IOException("Failed to create database directory: " + dbName);
             }
         }
 
-        File tableFile = getTableFile(DBName, table.getName());
+        File tableFile = getTableFile(dbName, table.getName());
         return writeTableToFile(table, tableFile);
     }
 
@@ -86,12 +86,11 @@ public class DBStorage {
                 allSaved = false;
             }
         }
-
         return allSaved;
     }
 
-    private DBTable loadTableFromFile(String DBName, String tableName) throws IOException {
-        File tableFile = getTableFile(DBName, tableName);
+    private DBTable loadTableFromFile(String dbName, String tableName) throws IOException {
+        File tableFile = getTableFile(dbName, tableName);
         if (!tableFile.exists()) return null;
 
         BufferedReader reader = new BufferedReader(new FileReader(tableFile));

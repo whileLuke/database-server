@@ -31,16 +31,34 @@ public class InputTokeniser {
     }
 
     private List<String> tokeniseCompoundOperators(String[] initialTokens) {
-        List<String> tokensList = new ArrayList<>();
+        List<String> tokens = new ArrayList<>();
         for (int i = 0; i < initialTokens.length; i++) {
             if (i < initialTokens.length - 1 &&
                     (initialTokens[i].equals(">") || initialTokens[i].equals("<") ||
                             initialTokens[i].equals("=") || initialTokens[i].equals("!")) &&
-                    initialTokens[i+1].equals("=")) {
-                tokensList.add(initialTokens[i] + initialTokens[i+1]);
+                    initialTokens[i + 1].equals("=")) {
+                tokens.add(initialTokens[i] + initialTokens[i + 1]);
                 i++;
-            } else tokensList.add(initialTokens[i]);
+            } else tokens.add(initialTokens[i]);
         }
-        return tokensList;
+        return tokens;
+    }
+
+    public List<String> tokeniseConditions(List<String> conditions) {
+        List<String> tokens = new ArrayList<>();
+        for (String condition : conditions) {
+            for (String conditionPart : condition.split("\\s+")) {
+                if (!conditionPart.isEmpty()) tokens.add(conditionPart);
+            }
+        }
+        return tokens;
+    }
+
+    public List<String> tokeniseConditionsAlternate(List<String> conditions) {
+        StringBuilder conditionString = new StringBuilder();
+        for (String condition : conditions) {
+            conditionString.append(condition).append(" ");
+        }
+        return tokenise(conditionString.toString());
     }
 }

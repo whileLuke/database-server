@@ -8,44 +8,46 @@ import java.util.List;
 public class DeleteCommand extends DBCommand {
     @Override
     public String query() throws IOException {
+        this.inputTokeniser = new InputTokeniser();
+
         String errorMessage = errorChecker.checkDeleteCommand(tableNames, conditions);
         if (errorMessage != null) return errorMessage;
 
         String tableName = tableNames.get(0).toLowerCase();
         DBTable table = getTable(tableName);
 
-        List<List<String>> rows = table.getRows();
-        List<String> columns = table.getColumnsLowerCase();
-        List<String> tokens = tokeniseConditions(conditions);
-        ConditionParser parser = new ConditionParser(tokens);
-        ConditionNode conditionTree = parser.parseConditions();
-        if (parser.getErrorMessage() != null) return parser.getErrorMessage();
+        ConditionNode conditionTree = parseConditions();
+        if (conditionTree == null) return "[ERROR] Your condition was formatted incorrectly.";
 
-        int initialRowCount = rows.size();
-        Iterator<List<String>> iterator = rows.iterator();
-
-        while (iterator.hasNext()) {
-            List<String> row = iterator.next();
-            boolean matches = conditionTree.evaluateCondition(row, columns);
-            if (matches) iterator.remove();
-        }
-        int deletedRows = initialRowCount - rows.size();
-        if (deletedRows > 0) {
-            if (saveCurrentDB()) return "[OK] " + deletedRows + " row(s) deleted.";
-            else return "[ERROR] Could not save the database after deletion.";
-        } else return "[OK] No rows deleted from the database."; //Maybe print column names here.
+        int deletedRowCount = deleteMatchingRows(table, conditionTree);
+        return formatResult(deletedRowCount);
     }
 
-    private List<String> tokeniseConditions(List<String> conditions) {
-        List<String> tokens = new ArrayList<>();
-        for (String condition : conditions) {
-            String[] parts = condition.split("\\s+");
-            for (String part : parts) {
-                if (!part.isEmpty()) {
-                    tokens.add(part);
-                }
-            }
+    private ConditionNode parseConditions() {
+        List<String> tokens = inputTokeniser.tokeniseConditions(conditions);
+        ConditionParser parser = new ConditionParser(tokens);
+        ConditionNode conditionTree = parser.parseConditions();
+
+        if (parser.getErrorMessage() != null) return null;
+        return conditionTree;
+    }
+
+    private int deleteMatchingRows(DBTable table, ConditionNode conditionTree) {
+        List<List<String>> rows = table.getRows();
+        List<String> columns = table.getColumnsLowerCase();
+        int initialRowCount = rows.size();
+        List<List<String>> rowsToDelete = new ArrayList<>();
+
+        for (List<String> row : rows) {
+            boolean matches = conditionTree.evaluateCondition(row, columns);
+            if (matches) rowsToDelete.add(row);
         }
-        return tokens;
+        rows.removeAll(rowsToDelete);
+        return initialRowCount - rows.size();
+    }
+
+    private String formatResult(int deletedRowCount) throws IOException {
+        if (saveCurrentDB()) return "[OK] " + deletedRowCount + " rows deleted.";
+        else return "[ERROR] Could not save the database after deletion.";
     }
 }

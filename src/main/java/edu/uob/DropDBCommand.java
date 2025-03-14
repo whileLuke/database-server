@@ -5,10 +5,10 @@ import java.io.IOException;
 public class DropDBCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.checkIfDBNameProvided(DBName);
+        String errorMessage = errorChecker.checkIfDBNameProvided(dbName);
         if (errorMessage != null) return errorMessage;
 
-        if (server.deleteDB(DBName)) return "[OK] Dropped database '" + DBName + "'.";
-        else return "[ERROR] Database '" + DBName + "' does not exist.";
+        if (server.deleteDB(dbName)) return "[OK] Dropped database '" + dbName + "'.";
+        else return "[ERROR] Database '" + dbName + "' does not exist.";
     }
 }

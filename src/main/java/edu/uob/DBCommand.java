@@ -9,10 +9,10 @@ public abstract class DBCommand {
     protected DBServer server;
     protected String currentDB;
     protected String commandType;
-    protected String DBName;
+    protected String dbName;
     protected Map<String, DBTable> tables;
     protected CommandErrorChecker errorChecker;
-    protected ConditionParser conditionParser;
+    protected InputTokeniser inputTokeniser;
     protected List<String> tableNames = new ArrayList<>();
     protected List<String> columnNames = new ArrayList<>();
     protected List<String> values = new ArrayList<>();
@@ -49,16 +49,5 @@ public abstract class DBCommand {
             processedValues.add(removeQuotes(value));
         }
         return processedValues;
-    }
-
-    public String processWhereClause(List<String> tokens) {
-        ConditionParser parser = new ConditionParser(tokens);
-        ConditionNode condition = parser.parseConditions();
-
-        if (parser.getErrorMessage() != null) {
-            return parser.getErrorMessage();
-        }
-
-        return "[OK] Query executed successfully";
     }
 }

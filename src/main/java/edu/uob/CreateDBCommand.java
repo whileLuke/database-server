@@ -5,11 +5,13 @@ import java.io.IOException;
 public class CreateDBCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String errorMessage = errorChecker.checkIfDBNameProvided(DBName);
+        String errorMessage = errorChecker.checkIfDBNameProvided(dbName);
         if (errorMessage != null) return errorMessage;
-        errorMessage = errorChecker.checkIfReservedWord(DBName);
+
+        errorMessage = errorChecker.checkIfReservedWord(dbName);
         if (errorMessage != null) return errorMessage;
-        if (server.createDB(DBName)) return "[OK] Database '" + DBName + "' created.";
-        else return "[ERROR] Failed to create database '" + DBName + "'. Check if it already exists.";
+
+        if (server.createDB(dbName)) return "[OK] Database '" + dbName + "' created.";
+        else return "[ERROR] Failed to create database '" + dbName + "'. Check if it already exists.";
     }
 }

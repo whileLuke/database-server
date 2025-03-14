@@ -11,6 +11,7 @@ public class DropTableCommand extends DBCommand {
 
         String tableName = tableNames.get(0).toLowerCase();
         File tableFile = new File(server.getStorageFolderPath() + File.separator + currentDB, tableName + ".tab");
+
         if (tableFile.delete()) {
             tables.remove(tableName);
             saveCurrentDB();

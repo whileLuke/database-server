@@ -29,7 +29,7 @@ public class MyTests {
     }
 
     @Test
-    public void testBasicOperations() throws IOException {
+    public void testOperations() throws IOException {
         String randomName = generateRandomName();
         sendCommandToServer("CREATE DATABASE " + randomName + ";");
         sendCommandToServer("USE " + randomName + ";");
@@ -76,7 +76,7 @@ public class MyTests {
     }
 
     @Test
-    public void testLIKEAndOtherSelectors() throws IOException {
+    public void testSelects() throws IOException {
         String randomName = generateRandomName();
         sendCommandToServer("CREATE DATABASE " + randomName + ";");
         sendCommandToServer("USE " + randomName + ";");
@@ -143,7 +143,7 @@ public class MyTests {
     }
 
     @Test
-    public void testErrorsAndInvalidQueries() throws IOException, Exception {
+    public void testInvalidQueries() throws IOException, Exception {
         String randomName = generateRandomName();
         sendCommandToServer("CREATE DATABASE " + randomName + ";");
         sendCommandToServer("USE " + randomName + ";");

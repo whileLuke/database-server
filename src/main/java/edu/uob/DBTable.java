@@ -18,7 +18,7 @@ public class DBTable {
 
     public String getName() { return tableName; }
 
-    public List<String> getColumns() { return new ArrayList<>(columns); } //TO LOWERCASE.
+    public List<String> getColumns() { return new ArrayList<>(columns); }
 
     public List<String> getColumnsLowerCase() {
         ArrayList<String> lowerCaseColumns = new ArrayList<>();
@@ -51,6 +51,7 @@ public class DBTable {
     public boolean addColumn(String columnName) {
         if (columns.contains(columnName)) return false;
         columns.add(columnName);
+
         for (List<String> row : rows) row.add(null);
         return true;
     }
@@ -58,20 +59,21 @@ public class DBTable {
     public boolean dropColumn(String columnName) {
         int columnIndex = columns.indexOf(columnName);
         if (columnIndex == -1) return false;
+
         columns.remove(columnIndex);
         for (List<String> row : rows) row.remove(columnIndex);
         return true;
     }
 
     public int generateNextID() throws IOException {
-        addIdColumnIfNotExists();
+        addIDColumnIfNotExists();
         int maxID = Math.max(getMaxIDFromTable(), readMaxIDFromFile());
         int newID = maxID + 1;
         writeNewMaxID(newID);
         return newID;
     }
 
-    private void addIdColumnIfNotExists() {
+    private void addIDColumnIfNotExists() {
         int idColumnIndex = columns.indexOf("id");
         if (idColumnIndex == -1) {
             columns.add(0, "id");
@@ -115,7 +117,9 @@ public class DBTable {
     public String toString() {
         StringBuilder tableString = new StringBuilder();
         tableString.append(String.join("\t", columns)).append("\n");
+
         for (List<String> row : rows) tableString.append(String.join("\t", row)).append("\n");
+
         if (!tableString.isEmpty()) tableString.setLength(tableString.length() - 1);
         return tableString.toString();
     }

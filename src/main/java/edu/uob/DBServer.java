@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//need a command parser and a command lexer
-
 /** This class implements the DB server. */
 public class DBServer {
 
@@ -19,7 +17,7 @@ public class DBServer {
     private final DBStorage storage;
     private final InputTokeniser tokeniser;
     public static String currentDB;
-    public static Map<String, DBTable> tables = new HashMap<String, DBTable>();
+    public Map<String, DBTable> tables = new HashMap<String, DBTable>();
 
     public static void main(String args[]) throws Exception {
         DBServer server = new DBServer();
@@ -54,7 +52,7 @@ public class DBServer {
 
         List<String> tokens = tokeniser.tokenise(command);
         CommandParser parser = new CommandParser(this);
-        return parser.parseCommand(tokens); //Might need an error message or not here.
+        return parser.parseCommand(tokens);
     }
 
     public boolean saveCurrentDB() throws IOException {
@@ -64,6 +62,7 @@ public class DBServer {
 
     public boolean loadTables(String DBName) throws IOException {
         if (!storage.DBExists(DBName)) return false;
+
         tables = storage.loadTables(DBName);
         currentDB = DBName.toLowerCase();
         return true;

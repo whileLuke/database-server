@@ -14,7 +14,7 @@ public class CommandParser {
 
     public String parseCommand(List<String> tokensList) throws IOException {
         tokens = tokensList;
-        if (tokens.size() < 2) return "[ERROR] The command you've entered is not long enough (or is empty).";
+        if (tokens.size() < 2) return "[ERROR] The command you've entered is not long enough.";
 
         DBCommand cmd;
         String cmdType = tokens.get(0).toUpperCase();
@@ -42,7 +42,7 @@ public class CommandParser {
     private DBCommand parseUse() {
         if (tokens.size() == 3 && endsWithSemicolon() && !isAsterisk(tokens.get(1))) {
             UseCommand useCmd = new UseCommand();
-            useCmd.DBName = tokens.get(1);
+            useCmd.dbName = tokens.get(1);
             return useCmd;
         } else return null;
     }
@@ -86,7 +86,7 @@ public class CommandParser {
     private DBCommand parseCreateDB() {
         if (tokens.size() == 4 && endsWithSemicolon() && !isAsterisk(tokens.get(2))) {
             CreateDBCommand cmd = new CreateDBCommand();
-            cmd.DBName = tokens.get(2);
+            cmd.dbName = tokens.get(2);
             return cmd;
         } else return null;
     }
@@ -94,13 +94,14 @@ public class CommandParser {
     private DBCommand parseDrop() {
         if (tokens.size() != 4 || !endsWithSemicolon()) return null;
 
-        if (tokens.get(1).equalsIgnoreCase("database")) {
+        String dropType = tokens.get(1).toLowerCase();
+        if (dropType.equals("database")) {
             DropDBCommand cmd = new DropDBCommand();
-            cmd.DBName = tokens.get(2);
+            cmd.dbName = tokens.get(2);
             return cmd;
         }
 
-        else if (tokens.get(1).equalsIgnoreCase("table")) {
+        else if (dropType.equals("table")) {
             DropTableCommand cmd = new DropTableCommand();
             cmd.tableNames.add(tokens.get(2));
             return cmd;
@@ -110,8 +111,10 @@ public class CommandParser {
 
     private DBCommand parseAlter() {
         if (tokens.size() < 6 || !endsWithSemicolon()) return null;
+
         String operation = tokens.get(3).toUpperCase();
         if (!(operation.equals("ADD") || operation.equals("DROP"))) return null;
+
         AlterCommand cmd = new AlterCommand();
         cmd.tableNames.add(tokens.get(2));
         cmd.commandType = operation;
@@ -137,6 +140,7 @@ public class CommandParser {
 
     private DBCommand parseSelect() {
         if (tokens.size() < 4 || !endsWithSemicolon()) return null;
+
         SelectCommand cmd = new SelectCommand();
         int index = getColumnsFromTokens(cmd);
         parseWhereClause(cmd, index + 1);
@@ -172,10 +176,8 @@ public class CommandParser {
 
             if (token.startsWith("'") && !token.endsWith("'")) inQuotes = true;
 
-            //else if (
-            //        (token.endsWith("'") && !token.startsWith("'"))) inQuotes = false; //TODO: maybe edit this so that if it starts or ends with a quote then we return null.
-
-            if (!inQuotes && (token.equalsIgnoreCase("AND") || token.equalsIgnoreCase("OR"))) {
+            if (!inQuotes && (token.equalsIgnoreCase("AND") ||
+                    token.equalsIgnoreCase("OR"))) {
                 if (!condition.isEmpty()) {
                     conditions.add(condition.toString().trim());
                     condition.setLength(0);
@@ -189,8 +191,10 @@ public class CommandParser {
 
     private DBCommand parseUpdate() {
         if (tokens.size() < 7 || !tokens.get(2).equalsIgnoreCase("SET")) return null;
+
         UpdateCommand cmd = new UpdateCommand();
         cmd.tableNames.add(tokens.get(1));
+
         int i = parseSetClause(cmd);
         if (i == -1) return null;
         parseWhereClause(cmd, i);
@@ -202,11 +206,15 @@ public class CommandParser {
         while (index < tokens.size() && !tokens.get(index).equalsIgnoreCase("WHERE")) {
             cmd.columnNames.add(tokens.get(index));
             index++;
+
             if (index >= tokens.size() || !tokens.get(index).equals("=")) return -1;
             index++;
-            cmd.values.add(tokens.get(index).replace("'", "")); //Not sure If this is needed. Test it out wit some practice Select commands.
+
+            cmd.values.add(tokens.get(index).replace("'", ""));
             index++;
+
             if (index >= tokens.size()) return -1;
+
             if (tokens.get(index).equals(",")) index++;
         }
         return index;
@@ -214,6 +222,7 @@ public class CommandParser {
 
     private DBCommand parseJoin() {
         if (tokens.size() != 9 || !isValidJoinSyntax()) return null;
+
         JoinCommand cmd = new JoinCommand();
         cmd.tableNames.add(tokens.get(1));
         cmd.tableNames.add(tokens.get(3));
@@ -225,11 +234,13 @@ public class CommandParser {
     private boolean isValidJoinSyntax() {
         return tokens.get(2).equalsIgnoreCase("AND") &&
                 tokens.get(4).equalsIgnoreCase("ON") &&
-                tokens.get(6).equalsIgnoreCase("AND");
+                tokens.get(6).equalsIgnoreCase("AND") &&
+                tokens.get(8).equals(";");
     }
 
     private DBCommand parseDelete() {
         if (tokens.size() < 5 || !tokens.get(1).equalsIgnoreCase("FROM")) return null;
+
         DeleteCommand cmd = new DeleteCommand();
         cmd.tableNames.add(tokens.get(2));
         parseWhereClause(cmd, 3);

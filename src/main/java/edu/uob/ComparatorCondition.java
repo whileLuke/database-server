@@ -17,6 +17,7 @@ public class ComparatorCondition extends ConditionNode {
     boolean evaluateCondition(List<String> row, List<String> columns) {
         int index = columns.indexOf(columnName);
         if (index == -1) return false;
+
         String rowValue = row.get(index).trim();
         String conditionValue = value;
         if (isInQuotes(value)) conditionValue = value.substring(1, value.length() - 1).trim();
@@ -42,7 +43,5 @@ public class ComparatorCondition extends ConditionNode {
         }
     }
 
-    boolean isInQuotes(String value){
-        return (value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"));
-    }
+    boolean isInQuotes(String value) { return (value.startsWith("'") && value.endsWith("'")); }
 }

@@ -5,9 +5,11 @@ import java.io.IOException;
 public class UseCommand extends DBCommand {
     @Override
     public String query() throws IOException {
-        String error = errorChecker.checkIfDBNameProvided(DBName);
-        if (error != null) return error;
-        if (server.useDB(DBName)) return "[OK] Using database '" + DBName + "'.";
-        else return "[ERROR] Database '" + DBName + "' does not exist.";
+        String errorMessage = errorChecker.checkIfDBNameProvided(dbName);
+
+        if (errorMessage != null) return errorMessage;
+
+        if (server.useDB(dbName)) return "[OK] Using database '" + dbName + "'.";
+        else return "[ERROR] Database '" + dbName + "' does not exist.";
     }
 }

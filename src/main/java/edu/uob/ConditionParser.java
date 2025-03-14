@@ -27,6 +27,7 @@ public class ConditionParser {
             String operator = tokens.get(index);
             if (!operator.equalsIgnoreCase("AND") && !operator.equalsIgnoreCase("OR")) break;
             index++;
+
             ConditionNode right = parseParenthesis();
             if (right == null) return null;
             left = new BoolOperatorCondition(operator.toUpperCase(), left, right);
@@ -60,11 +61,6 @@ public class ConditionParser {
         String operator = tokens.get(index);
         index++;
         String value = tokens.get(index);
-
-        if (value.equals(";")) {
-            errorMessage = "[ERROR] An invalid comparison was attempted.";
-            return null;
-        }
         index++;
 
         if (index < tokens.size()) {

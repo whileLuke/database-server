@@ -27,7 +27,7 @@ public class CommandErrorChecker {
     }
 
     public String checkIfDBSelected() {
-        if (currentDB == null) return "[ERROR] No database selected. Type 'USE [DBName];' to select a database.";
+        if (currentDB == null) return "[ERROR] No database selected. Type 'USE [dbName];' to select a database.";
         return null;
     }
 
@@ -83,20 +83,112 @@ public class CommandErrorChecker {
     }
 
     public String checkTableFunctionality(List<String> tableNames) {
-        String error = checkIfDBSelected();
-        if (error != null) return error;
+        String errorMessage = checkIfDBSelected();
+        if (errorMessage != null) return errorMessage;
 
-        error = checkIfTableNameProvided(tableNames);
-        if (error != null) return error;
+        errorMessage = checkIfTableNameProvided(tableNames);
+        if (errorMessage != null) return errorMessage;
 
         String tableName = tableNames.get(0).toLowerCase();
         return checkIfTableExists(tableName);
     }
 
+    public String checkAlterCommand(List<String> tableNames, List<String> columnNames, String commandType) {
+        String errorMessage = checkIfDBSelected();
+        if (errorMessage != null) return errorMessage;
+        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) {
+            return "[ERROR] ALTER command is missing either table name, column names or alteration type.";
+        }
+
+        String tableName = tableNames.get(0).toLowerCase();
+        errorMessage = checkIfTableExists(tableName);
+        if (errorMessage != null) return errorMessage;
+
+        String columnName = columnNames.get(0);
+        errorMessage = checkIfIDColumn(columnName);
+        if (errorMessage != null) return errorMessage;
+
+        if (isReservedWord(columnName)) return "[ERROR] '" + columnName + "' not allowed as a column name";
+        if (!commandType.equalsIgnoreCase("ADD") && !commandType.equalsIgnoreCase("DROP")) {
+            return "[ERROR] Your ALTER command must specify either 'ADD' or 'DROP'";
+        }
+        return null;
+    }
+
+    public String checkCreateTableCommand(List<String> tableNames, List<String> columnNames) {
+        String errorMessage = checkIfDBSelected();
+        if (errorMessage != null) return errorMessage;
+
+        errorMessage = checkIfTableNameProvided(tableNames);
+        if (errorMessage != null) return errorMessage;
+
+        String tableName = tableNames.get(0).toLowerCase();
+        errorMessage = checkIfReservedWord(tableName);
+        if (errorMessage != null) return errorMessage;
+
+        errorMessage = checkForDuplicateColumns(columnNames);
+        if (errorMessage != null) return errorMessage;
+
+        for (String columnName : columnNames) {
+            errorMessage = checkIfReservedWord(columnName);
+            if (errorMessage != null) return errorMessage;
+        }
+        return null;
+    }
+
+    public String checkDeleteCommand(List<String> tableNames, List<String> conditions) {
+        String errorMessage = checkTableFunctionality(tableNames);
+        if (errorMessage != null) return errorMessage;
+
+        if (conditions.isEmpty()) return "[ERROR] DELETE commands require a WHERE condition.";
+        return null;
+    }
+
+    public String checkInsertCommand(List<String> tableNames, List<String> values) {
+        String errorMessage = checkIfDBSelected();
+        if (errorMessage != null) return errorMessage;
+
+        errorMessage = checkIfTableNameProvided(tableNames);
+        if (errorMessage != null) return errorMessage;
+
+        errorMessage = checkIfValuesEmpty(values);
+        if (errorMessage != null) return errorMessage;
+
+        String tableName = tableNames.get(0).toLowerCase();
+        return checkIfTableExists(tableName);
+    }
+
+    public String checkJoinCommand(List<String> tableNames, List<String> columnNames) {
+        String errorMessage = checkIfDBSelected();
+        if (errorMessage != null) return errorMessage;
+        if (tableNames.size() != 2) return "[ERROR] The JOIN command needs two table names.";
+
+        String table1Name = tableNames.get(0).toLowerCase();
+        String table2Name = tableNames.get(1).toLowerCase();
+
+        errorMessage = checkIfTableExists(table1Name);
+        if (errorMessage != null) return errorMessage;
+        errorMessage = checkIfTableExists(table2Name);
+        if (errorMessage != null) return errorMessage;
+
+        if (columnNames.size() != 2) return "[ERROR] The JOIN command needs two column names";
+
+        DBTable table1 = tables.get(table1Name);
+        DBTable table2 = tables.get(table2Name);
+        String column1 = columnNames.get(0).toLowerCase();
+        String column2 = columnNames.get(1).toLowerCase();
+
+        errorMessage = checkIfColumnExists(table1, column1);
+        if (errorMessage != null) return errorMessage;
+
+        errorMessage = checkIfColumnExists(table2, column2);
+        return errorMessage;
+    }
+
     public String checkUpdateCommand(List<String> tableNames, List<String> columnNames,
                                      List<String> values, List<String> conditions) {
-        String error = checkTableFunctionality(tableNames);
-        if (error != null) return error;
+        String errorMessage = checkTableFunctionality(tableNames);
+        if (errorMessage != null) return errorMessage;
 
         if (columnNames.isEmpty() || values.isEmpty()) {
             return "[ERROR] UPDATE needs at least one column name and at least one value.";
@@ -110,76 +202,6 @@ public class CommandErrorChecker {
         if (conditions.isEmpty()) {
             return "[ERROR] UPDATE commands need a WHERE condition.";
         }
-        return null;
-    }
-
-    public String checkDeleteCommand(List<String> tableNames, List<String> conditions) {
-        String error = checkTableFunctionality(tableNames);
-        if (error != null) return error;
-
-        if (conditions.isEmpty()) return "[ERROR] DELETE commands require a WHERE condition.";
-        return null;
-    }
-
-    public String checkAlterCommand(List<String> tableNames, List<String> columnNames, String commandType) {
-        String error = checkIfDBSelected();
-        if (error != null) return error;
-        if (tableNames.isEmpty() || columnNames.isEmpty() || commandType == null) {
-            return "[ERROR] Incorrect ALTER command - either no table name, column names or alteration type provided.";
-        }
-
-        String tableName = tableNames.get(0).toLowerCase();
-        error = checkIfTableExists(tableName);
-        if (error != null) return error;
-
-        String columnName = columnNames.get(0);
-        error = checkIfIDColumn(columnName);
-        if (error != null) return error;
-
-        if (isReservedWord(columnName)) return "[ERROR] '" + columnName + "' not allowed as a column name";
-        if (!commandType.equalsIgnoreCase("ADD") && !commandType.equalsIgnoreCase("DROP")) {
-            return "[ERROR] Your ALTER command must specify either 'ADD' or 'DROP'";
-        }
-        return null;
-    }
-
-    public String checkCreateTableCommand(List<String> tableNames, List<String> columnNames) {
-        String error = checkIfDBSelected();
-        if (error != null) return error;
-
-        error = checkIfTableNameProvided(tableNames);
-        if (error != null) return error;
-
-        String tableName = tableNames.get(0).toLowerCase();
-        error = checkIfReservedWord(tableName);
-        if (error != null) return error;
-
-        error = checkForDuplicateColumns(columnNames);
-        if (error != null) return error;
-
-        for (String columnName : columnNames) {
-            error = checkIfReservedWord(columnName);
-            if (error != null) return error;
-        }
-        return null;
-    }
-
-    public String checkJoinCommand(List<String> tableNames, List<String> columnNames) {
-        String error = checkIfDBSelected();
-        if (error != null) return error;
-
-        if (tableNames.size() != 2) return "[ERROR] The JOIN command needs two table names.";
-
-        String table1Name = tableNames.get(0).toLowerCase();
-        String table2Name = tableNames.get(1).toLowerCase();
-
-        error = checkIfTableExists(table1Name);
-        if (error != null) return error;
-
-        error = checkIfTableExists(table2Name);
-        if (error != null) return error;
-
-        if (columnNames.size() != 2) return "[ERROR] The JOIN command needs two column names";
         return null;
     }
 }
