@@ -1,5 +1,0 @@
-id	firstName	lastName	age	gpa	major	credits	enrolled	grade	startDate
-1	John	Smith	20	3.5	CS	60	TRUE	A	2022-09-01
-2	Emma	Johnson	19	3.8	Physics	45	TRUE	A	2022-09-01
-3	Michael	Williams	17	3.2	Math	30	TRUE	B	2022-09-01
-4	Sarah	Jones	21	3.9	CS	75	TRUE	A	2021-09-01
